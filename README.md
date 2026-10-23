@@ -6,11 +6,11 @@ Companion code for the BSU ecological statistics group talk on IDFG mark-recaptu
 
 **[View the presentation slides](https://docs.google.com/presentation/d/177eQCKUWrDXGobg0EtnxK9MQ_RDyjjAWeHS4S07U_pA/edit?slide=id.p1#slide=id.p1).**
 
-Each script simulates data from known values, fits a model, and checks the answer against the truth. Start at 01 and work up: each step adds one idea.
+Most scripts simulate data from known values, fit a model, and check the answer against the truth. Start at 01 and work up: each step adds one idea.
 
 New to Bayesian statistics? Start with [01_first_bayesian_model.R](01_first_bayesian_model.R), and keep [GLOSSARY.md](GLOSSARY.md) open: it explains the fish terms (GE, GRJ, PIT tag, spill) and the statistics terms (prior, posterior, Rhat, logit) in plain language.
 
-**These are teaching examples, not the models IDFG uses for its estimates.** They are simplified so each idea stands on its own. The concepts carry over to the production models.
+**These are teaching examples, not the models IDFG uses for its estimates.** They are simplified so each idea stands on its own. The concepts carry over to the production models. Written with help from Claude. I've tested every script and checked every reference.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Run [00_setup.R](00_setup.R) first. It installs any missing packages, checks tha
 4. Begin with [01_first_bayesian_model.R](01_first_bayesian_model.R). Run one numbered lesson at a time, reading the comments and inspecting the plots.
 5. Keep the [glossary](GLOSSARY.md) handy; see [Using This Code](USING_THIS_CODE.md) to adapt an example.
 
-The numbered R scripts stay together so they can be run directly from this folder. 
+The numbered R scripts stay together so they can be run directly from this folder.
 
 ## Levels
 
@@ -58,7 +58,7 @@ The numbered R scripts stay together so they can be run directly from this folde
 | [08_bootstrap.R](08_bootstrap.R) | From GE to abundance: a bootstrap with GE held fixed vs one where every replicate carries its own GE draw. Coverage of each over 300 simulated weeks. Plain R, no JAGS. | Where SCRAPI's interval comes from; Jensen's inequality |
 | [09_recover_truth.R](09_recover_truth.R) | A small simulation study: bias and 95% interval coverage over 50 simulated data sets. | Does it recover GE? |
 
-Every script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Run times are a few seconds to a few minutes; `04`, `06`, `07`, and `09` are the slowest. In `06` and `07`, the single example and its plot run by default. The repeated simulations are off: set `run.repeats <- TRUE` at the top of either script to add them.
+Every lesson script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Run times are a few seconds to a few minutes; `04`, `06`, `07`, and `09` are the slowest. In `06` and `07`, the single example and its plot run by default. The repeated simulations are off: set `run.repeats <- TRUE` at the top of either script to add them.
 
 ## Real data to try
 
