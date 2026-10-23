@@ -1,0 +1,14 @@
+# JAGS model files written by the scripts
+*.jags
+
+# R session files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Plots saved while running
+Rplots.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
