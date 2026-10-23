@@ -33,7 +33,7 @@ Run [00_setup.R](00_setup.R) first. It installs any missing packages, checks tha
 4. Begin with [01_first_bayesian_model.R](01_first_bayesian_model.R). Run one numbered lesson at a time, reading the comments and inspecting the plots.
 5. Keep the [glossary](GLOSSARY.md) handy; see [Using This Code](USING_THIS_CODE.md) to adapt an example.
 
-The numbered R scripts stay together so they can be run directly from this folder. The original [source ZIP](markrecapture_jags%20%2818%29.zip) is retained for reference.
+The numbered R scripts stay together so they can be run directly from this folder. 
 
 ## Levels
 
