@@ -4,6 +4,8 @@
 
 Companion code for the BSU ecological statistics group talk on IDFG mark-recapture, from screw traps to Lower Granite Dam.
 
+**[View the presentation slides](https://docs.google.com/presentation/d/177eQCKUWrDXGobg0EtnxK9MQ_RDyjjAWeHS4S07U_pA/edit?slide=id.p1#slide=id.p1).**
+
 Each script simulates data from known values, fits a model, and checks the answer against the truth. Start at 01 and work up: each step adds one idea.
 
 New to Bayesian statistics? Start with [01_first_bayesian_model.R](01_first_bayesian_model.R), and keep [GLOSSARY.md](GLOSSARY.md) open: it explains the fish terms (GE, GRJ, PIT tag, spill) and the statistics terms (prior, posterior, Rhat, logit) in plain language.
