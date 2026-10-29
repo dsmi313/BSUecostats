@@ -46,7 +46,7 @@ The scripts are built around fish passing a dam, but the models are general. If 
 ## Gotchas that bite real studies
 
 - **Marked animals that aren't a fair sample.** Animals tagged after the outcome you're estimating (fish tagged inside the bypass, after they were already guided) make the rate look far better than it is, with a tight interval that misses the truth. Check where and when every tag was applied, and drop tags whose release site guarantees a route (`05`, section 7).
-- **Incomplete transport flags.** Check transport records and distinguish passage time from loading time. In `05`, moving unflagged barged fish from c6 to c1 leaves closed-form GE unchanged because those fish remain guided, while transport and bypass recovery change. That example cannot demonstrate the production claim that GE moved substantially. Establish that effect with the actual before/after data and model.
+- **Incomplete transport flags.** Check transport records and distinguish passage time from loading time. Missing flags leave GE unchanged but drag bypass recovery down, because barged fish look like bypassed fish that never reached GOJ (`05`, section 9).
 
 - **A parameter the data can't separate.** Without the right detection site, two parameters trade off along a ridge. The sampler still runs and Rhat still looks fine (`05`, section 8). Ask what part of the data identifies each parameter before you fit.
 - **Expanding by an uncertain rate.** 1 / rate is curved, so expanding by the average rate and averaging the expansions give different answers, and neither is guaranteed to be unbiased (`02` and `08`). Carry the rate's uncertainty into the interval, and check the point estimate against simulated truth.
