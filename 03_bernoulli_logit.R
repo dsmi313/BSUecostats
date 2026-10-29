@@ -16,6 +16,7 @@
 # All data are simulated. Requires JAGS and the jagsUI package.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(2)
@@ -63,7 +64,9 @@ print(fit)
 # Trace plots: each chain's draws in order. Look for grassy, overlapping fuzz.
 traceplot(fit, parameters = c("b0", "b1"))
 
-cat("Max Rhat:", round(max(unlist(fit$Rhat), na.rm = TRUE), 3), "\n")
+print(fit_diagnostics(fit))
+if (!fit_ok(fit)) warning("fit: diagnostics need attention before interpreting results.")
+cat("Max Rhat:", round(fit_rhat(fit), 3), "\n")
 cat("b0: truth", b0, " estimate", round(fit$mean$b0, 2),
     " 95% CrI", round(quantile(fit$sims.list$b0, c(0.025, 0.975)), 2), "\n")
 cat("b1: truth", b1, " estimate", round(fit$mean$b1, 2),
@@ -92,6 +95,11 @@ p1 <- ggplot(curve.df, aes(spill)) +
   labs(x = "Spill share", y = "Guided (1) or not (0)") +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p1)
+
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set n.fish <- 50. Does the interval for b1 still exclude zero?
+# 2. Set b1 <- 0. What should happen to the fitted curve and its uncertainty?
 
 # Lessons ----
 # - Each fish is a Bernoulli trial: guided or not. That is the noise part of

@@ -8,7 +8,7 @@
 # not abundance. To get N you need separate information on detection (p).
 # At a screw trap, that information is the efficiency trials: marked fish
 # released upstream and recaptured. This script shows both halves:
-#   Model 1: counts only (BPA Chapter 5 as written). It tracks N * p.
+#   Model 1: counts only (adapted from BPA Chapter 5). It tracks N * p.
 #   Model 2: counts plus efficiency trials. It recovers N.
 #
 # This is a teaching example, not the model IDFG uses to estimate screw trap
@@ -19,6 +19,7 @@
 # Requires JAGS (https://sourceforge.net/projects/mcmc-jags/) and the jagsUI package.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(2026)
@@ -65,7 +66,7 @@ trial.days <- setdiff(trial.days, trap.out)
 M <- rep(30, length(trial.days))
 R <- rbinom(length(trial.days), M, p[trial.days])
 
-# 2. Model 1: counts only (BPA Chapter 5 as written) ----
+# 2. Model 1: counts only (adapted from BPA Chapter 5) ----
 # Poisson counts around the latent abundance, with no detection term.
 # This is exactly the situation BPA 5.3 warns about: with p < 1,
 # the estimated "N" is really N * p.
@@ -166,9 +167,13 @@ fit2 <- jags(jags.data2, inits2, params2, "ssm_with_trials.jags",
              n.chains = nc, n.iter = ni, n.burnin = nb, n.thin = nt, parallel = TRUE)
 
 # 4. Check convergence ----
-# Rhat near 1 (below 1.1) for every monitored node.
-cat("Model 1 max Rhat:", round(max(unlist(fit1$Rhat), na.rm = TRUE), 3), "\n")
-cat("Model 2 max Rhat:", round(max(unlist(fit2$Rhat), na.rm = TRUE), 3), "\n")
+# Rhat near 1 (below 1.01) for every monitored node.
+print(fit_diagnostics(fit1))
+if (!fit_ok(fit1)) warning("fit1: diagnostics need attention before interpreting results.")
+print(fit_diagnostics(fit2))
+if (!fit_ok(fit2)) warning("fit2: diagnostics need attention before interpreting results.")
+cat("Model 1 max Rhat:", round(fit_rhat(fit1), 3), "\n")
+cat("Model 2 max Rhat:", round(fit_rhat(fit2), 3), "\n")
 
 # 5. Compare to the truth ----
 ci <- function(x) round(quantile(x, c(0.025, 0.975)))
@@ -218,6 +223,13 @@ p2 <- ggplot(p.df, aes(day)) +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p2)
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Change trap.out <- 41:45 to trap.out <- 31:55. How do the passage
+#    intervals inside the outage compare with the observed days?
+# 2. Change M <- rep(30, length(trial.days)) to use 10 marked fish per trial.
+#    Which quantities become less precise, and do both fits pass diagnostics?
+
 # Lessons ----
 # - A state-space model separates the process (how many fish really pass each
 #   day) from the observation (how many the trap catches).
@@ -227,7 +239,9 @@ print(p2)
 # - Adding separate data on detection (efficiency trials) is what turns the
 #   index into abundance.
 # - Days with the trap out can be left as NA. The model fills them in from
-#   the days around them, with honest uncertainty.
+#   the days around them, with uncertainty under the assumed model.
+#   The binomial simulation and Poisson observation model differ: Poisson
+#   variance is N*p rather than N*p*(1-p). Check coverage before adaptation.
 
 # Where BPA teaches this ----
 # - 5.2  A simple state-space model

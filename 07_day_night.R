@@ -18,15 +18,18 @@
 #   psi_night   logit(psi_night) = logit(psi_day) + night_eff
 #   GE          the blend (1 - a) psi_day + a psi_night
 #
-# Assumption: GRS detection p is the same day and night. The data can't
-# test it, because a c5 fish could have passed in either period.
+# Assumption: GRS detection p is the same day and night. A single group
+# cannot freely identify both detection rates when c5 has unknown timing.
+# Sharing guidance across rear types with different night shares can supply
+# additional identifying information, but precision may still be poor.
+# Equal p is a simplifying assumption here, not a universally untestable one.
 #
 # Why it matters: 06_hierarchical.R has wild fish borrow strength from the
 # far more numerous hatchery fish. Here wild and hatchery share the same true
 # day and night GE, but wild fish pass at night more often. So wild's pooled
 # GE really is higher than hatchery's, only because of timing. Three ways to
 # estimate wild GE for one week:
-#   Wild alone:       six-cell model on wild fish only (thin but honest)
+#   Wild alone:       six-cell model on wild fish only (sparse, without borrowing)
 #   Borrow pooled:    wild and hatchery forced to share one pooled psi
 #   Borrow split:     wild and hatchery forced to share psi_day and psi_night;
 #                     each rear keeps its own night share a
@@ -36,15 +39,34 @@
 # shared structure. The extremes make the timing problem easy to see; the
 # same problem leaks into partial pooling whenever pooled GE is what's shared.
 # Abundance is catch divided by GE, so the script reports the error in wild
-# abundance, using E[1/GE] over the posterior draws (02_lincoln_petersen.R).
+# abundance, using the posterior median of 1/GE (02_lincoln_petersen.R).
+# This remains finite when no guided wild fish are observed. In that case,
+# the wild-alone model's flat GE prior gives an infinite E[1/GE]; a finite
+# MCMC average would misleadingly print a finite answer. We therefore use
+# the same median-based abundance summary for all three methods.
 #
-# Teaching version: one week at a time, no covariates. Section 5 repeats the
+# Teaching version: one week at a time, no covariates. The talk adds a night
+# offset to the hierarchical daytime regression (including spill and outflow).
+# Here daytime GE is a single probability, so this is not that regression.
+# Section 5 repeats the
 # week 100 times (300 more model fits, several minutes). It's off by default:
 # set run.repeats to TRUE below to run it.
 # All data are simulated. Requires JAGS and the jagsUI and ggplot2 packages.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
+
+# 0. Simpson's paradox: the talk's two-week toy table ----
+simpson <- data.frame(week = c("A", "B"), fish = c(1000, 1000),
+                      day.ge = c(0.04, 0.02), night.ge = c(0.30, 0.25),
+                      night.share = c(0.10, 0.40))
+simpson$pooled.ge <- with(simpson, (1 - night.share) * day.ge + night.share * night.ge)
+simpson$guided <- simpson$fish * simpson$pooled.ge
+print(simpson)
+stopifnot(isTRUE(all.equal(simpson$pooled.ge, c(0.066, 0.112))))
+# Both within-period rates fall, but pooled GE rises because the timing mix
+# changes. This illustrates aggregation, not an estimated causal spill effect.
 
 set.seed(6)
 
@@ -207,8 +229,9 @@ params.alone  <- c("wild_ge", "psi", "p", "trans", "phi_S", "delta")
 params.pooled <- c("wild_ge", "psi", "p", "trans", "phi_S", "delta")
 params.split  <- c("wild_ge", "psi_day", "night_eff", "a", "p", "trans", "phi_S", "delta")
 
-# Percent error in wild abundance: abundance scales with 1 / GE
-abund.error <- function(fit) 100 * (mean(1 / fit$sims.list$wild_ge) * ge.true["wild"] - 1)
+# Percent error in median expanded wild abundance: catch is held fixed.
+# This isolates GE estimation, not all sources of abundance uncertainty.
+abund.error <- function(fit) 100 * (median(1 / fit$sims.list$wild_ge) * ge.true["wild"] - 1)
 
 labs3 <- c("Wild alone", "Borrow pooled", "Borrow split")
 cols3 <- c("Wild alone" = "gray40", "Borrow pooled" = "darkorange", "Borrow split" = "steelblue")
@@ -216,6 +239,7 @@ cols3 <- c("Wild alone" = "gray40", "Borrow pooled" = "darkorange", "Borrow spli
 # 3. One week ----
 
 wk <- simulate.week()
+cat("Zero guided wild fish this week:", sum(wk$n6[1, c(1, 2, 6)]) == 0, "\n")
 cat("Detected fish, wild:", sum(wk$n11[1, ]), "  hatchery:", sum(wk$n11[2, ]), "\n")
 
 # Data for each model
@@ -231,9 +255,15 @@ fit.pooled <- jags(data.pooled, NULL, params.pooled, "borrow_pooled.jags",
 fit.split  <- jags(data.split, NULL, params.split, "borrow_split.jags",
                    n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2, parallel = TRUE)
 
-cat("Max Rhat  wild alone:", round(max(unlist(fit.alone$Rhat), na.rm = TRUE), 3),
-    "  borrow pooled:", round(max(unlist(fit.pooled$Rhat), na.rm = TRUE), 3),
-    "  borrow split:", round(max(unlist(fit.split$Rhat), na.rm = TRUE), 3), "\n")
+print(fit_diagnostics(fit.alone))
+if (!fit_ok(fit.alone)) warning("fit.alone: diagnostics need attention before interpreting results.")
+print(fit_diagnostics(fit.pooled))
+if (!fit_ok(fit.pooled)) warning("fit.pooled: diagnostics need attention before interpreting results.")
+print(fit_diagnostics(fit.split))
+if (!fit_ok(fit.split)) warning("fit.split: diagnostics need attention before interpreting results.")
+cat("Max Rhat  wild alone:", round(fit_rhat(fit.alone), 3),
+    "  borrow pooled:", round(fit_rhat(fit.pooled), 3),
+    "  borrow split:", round(fit_rhat(fit.split), 3), "\n")
 
 one.week <- rbind(
   wild.alone    = c(estimate = mean(fit.alone$sims.list$wild_ge),
@@ -248,6 +278,7 @@ one.week <- rbind(
                     lower = unname(quantile(fit.split$sims.list$wild_ge, 0.025)),
                     upper = unname(quantile(fit.split$sims.list$wild_ge, 0.975)),
                     abundance.error.pct = abund.error(fit.split)))
+cat("Abundance errors use the posterior median of inverse GE, not its mean.\n")
 cat("True wild GE:", round(ge.true["wild"], 3), "\n")
 print(round(one.week, 3))
 
@@ -266,7 +297,8 @@ print(p1)
 # 5. Repeat the week many times ----
 # Only runs if run.repeats is TRUE (set near the top of the script). It's
 # FALSE by default, so this whole section is skipped unless you turn it on.
-# A fit with any Rhat above 1.1 is refit with more iterations. Weeks where any
+# Errors or inadequate Rhat/ESS diagnostics trigger one longer refit.
+# Weeks where any
 # of the three models still fails are left out for all three, so the
 # comparison stays paired, and the failure count is printed. Results describe
 # fits that passed diagnostics; if many fail, the hard weeks are the ones
@@ -276,41 +308,49 @@ if (run.repeats) {
   n.reps <- 100
   errors <- rhats <- matrix(NA, n.reps, 3,
                             dimnames = list(NULL, c("wild.alone", "borrow.pooled", "borrow.split")))
+  passed <- matrix(FALSE, n.reps, 3, dimnames = dimnames(errors))
+  zero.guided <- logical(n.reps)
   for (i in 1:n.reps) {
     w <- simulate.week()
+    zero.guided[i] <- sum(w$n6[1, c(1, 2, 6)]) == 0
     d.alone  <- list(n = w$n6[1, ], N_seen = sum(w$n6[1, ]))
     d.pooled <- list(n = w$n6, N_seen = rowSums(w$n6))
     d.split  <- list(n = w$n11, N_seen = rowSums(w$n11))
-    f.alone  <- jags(d.alone, NULL, params.alone, "wild_alone.jags", n.chains = 3,
+    f.alone  <- safe_jags(d.alone, NULL, params.alone, "wild_alone.jags", n.chains = 3,
                      n.iter = 4000, n.burnin = 1000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    f.pooled <- jags(d.pooled, NULL, params.pooled, "borrow_pooled.jags", n.chains = 3,
+    f.pooled <- safe_jags(d.pooled, NULL, params.pooled, "borrow_pooled.jags", n.chains = 3,
                      n.iter = 4000, n.burnin = 1000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    f.split  <- jags(d.split, NULL, params.split, "borrow_split.jags", n.chains = 3,
+    f.split  <- safe_jags(d.split, NULL, params.split, "borrow_split.jags", n.chains = 3,
                      n.iter = 4000, n.burnin = 1000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    # Any fit with an Rhat above 1.1 is refit once with four times as many
+    # Any fit that errors or fails diagnostics is refit with four times as many
     # iterations (same chains, same thinning, so four times the draws).
-    if (max(unlist(f.alone$Rhat), na.rm = TRUE) > 1.1)
-      f.alone <- jags(d.alone, NULL, params.alone, "wild_alone.jags", n.chains = 3,
+    if (!fit_ok(f.alone))
+      f.alone <- safe_jags(d.alone, NULL, params.alone, "wild_alone.jags", n.chains = 3,
                       n.iter = 16000, n.burnin = 4000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    if (max(unlist(f.pooled$Rhat), na.rm = TRUE) > 1.1)
-      f.pooled <- jags(d.pooled, NULL, params.pooled, "borrow_pooled.jags", n.chains = 3,
+    if (!fit_ok(f.pooled))
+      f.pooled <- safe_jags(d.pooled, NULL, params.pooled, "borrow_pooled.jags", n.chains = 3,
                        n.iter = 16000, n.burnin = 4000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    if (max(unlist(f.split$Rhat), na.rm = TRUE) > 1.1)
-      f.split <- jags(d.split, NULL, params.split, "borrow_split.jags", n.chains = 3,
+    if (!fit_ok(f.split))
+      f.split <- safe_jags(d.split, NULL, params.split, "borrow_split.jags", n.chains = 3,
                       n.iter = 16000, n.burnin = 4000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    errors[i, ] <- c(abund.error(f.alone), abund.error(f.pooled), abund.error(f.split))
-    rhats[i, ] <- c(max(unlist(f.alone$Rhat), na.rm = TRUE),
-                    max(unlist(f.pooled$Rhat), na.rm = TRUE),
-                    max(unlist(f.split$Rhat), na.rm = TRUE))
+    passed[i, ] <- c(fit_ok(f.alone), fit_ok(f.pooled), fit_ok(f.split))
+    if (all(passed[i, ]))
+      errors[i, ] <- c(abund.error(f.alone), abund.error(f.pooled), abund.error(f.split))
+    rhats[i, ] <- c(fit_rhat(f.alone),
+                    fit_rhat(f.pooled),
+                    fit_rhat(f.split))
     if (i %% 10 == 0) cat(i, "")
   }
   cat("\n")
   cat("Fits failing diagnostics after a retry:\n")
-  print(colSums(rhats > 1.1))
-  bad.week <- apply(rhats > 1.1, 1, any)
+  print(colSums(!passed))
+  cat("Zero-guided wild weeks:", sum(zero.guided), "of", n.reps,
+      "(retained whenever all fits pass; medians remain defined)\n")
+  bad.week <- !apply(passed, 1, all)
   cat("Weeks left out for all three models:", sum(bad.week), "of", n.reps,
       "(results below are among weeks where every fit passed)\n")
   errors[bad.week, ] <- NA
+  if (all(bad.week)) stop("No paired weeks passed diagnostics; inspect fit failures before summarizing.")
 
   summ <- t(apply(errors, 2, function(e) round(c(n = sum(!is.na(e)), median = median(e, na.rm = TRUE),
                                                  quantile(e, c(0.05, 0.95), na.rm = TRUE)), 1)))
@@ -344,26 +384,37 @@ if (run.repeats) {
     scale_color_manual(values = cols3, guide = "none") +
     coord_cartesian(xlim = c(min(err.df$error, 0), x.cap)) +
     labs(title = paste(n.reps, "simulated weeks (bar: median; dashed: no error)"),
-         x = "Error in wild abundance (%), middle 95% of weeks", y = NULL) +
+         x = "Error in median expanded wild abundance (%), middle 95% of weeks", y = NULL) +
     theme_bw(base_size = 13)
   print(p2)
 }
+
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set a.true <- c(wild = 0.09, hatchery = 0.09). Does borrowing pooled
+#    GE still cause the same systematic mismatch?
+# 2. Set night_eff <- 0 in the true values. Does a difference in night share
+#    still create a difference in true pooled GE?
+# 3. Set n.tagged <- c(wild = 20, hatchery = 6000). What happens to wild-only
+#    uncertainty and zero-guided weeks? Check diagnostics before comparisons.
 
 # Lessons ----
 # - Guidance can differ sharply by time of day. Pooled GE mixes guidance with
 #   timing: it moves whenever the night share moves.
 # - Wild borrowing hatchery's pooled GE carries hatchery's timing into the
 #   wild estimate and biases wild abundance. Borrowing day and night GE,
-#   blended with wild's own night share, removed that bias in this simulation.
+#   blended with wild's own night share, addresses that timing mismatch.
 # - The borrowing models here are complete pooling, the extreme case. The
 #   hierarchical model in 06 pools partially, but the same timing problem
 #   leaks in whenever pooled GE is what gets shared.
-# - Splitting removes bias, not all uncertainty: wild still estimates its own
-#   night share from few fish.
-# - Wild alone is about right on average but has a long tail: thin data
-#   sometimes give a GE near zero, and 1 / GE blows up.
-# - Equal GRS detection day and night is an assumption the data can't test.
-#   Write untestable assumptions down plainly.
+# - Splitting addresses timing bias; it does not guarantee an unbiased
+#   abundance estimate. Wild still estimates its night share from few fish.
+# - Wild alone can have a long right tail. With no guided fish, its
+#   posterior mean of inverse GE is infinite under this prior. The median
+#   remains defined; it is a different summary, not a cure for sparse data.
+# - Equal GRS detection day and night is an assumption. Relaxing it needs
+#   additional information or sharing assumptions; assess identifiability
+#   and precision for the particular model.
 
 # Where BPA teaches this ----
 # BPA has no day/night guidance example. The closest pieces:

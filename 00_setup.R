@@ -6,12 +6,21 @@
 
 # 1. R packages ----
 
-needed <- c("jagsUI", "ggplot2")
+needed <- c("jagsUI", "ggplot2", "posterior")
 missing <- needed[!sapply(needed, requireNamespace, quietly = TRUE)]
 if (length(missing) > 0) {
   cat("Installing:", missing, "\n")
-  install.packages(missing)
+  install.packages(missing, repos = "https://cloud.r-project.org")
 }
+
+# linewidth scales used by the lessons were added in ggplot2 3.4.0.
+if (requireNamespace("ggplot2", quietly = TRUE) && packageVersion("ggplot2") < "3.4.0") {
+  install.packages("ggplot2", repos = "https://cloud.r-project.org")
+}
+if (!requireNamespace("ggplot2", quietly = TRUE) || packageVersion("ggplot2") < "3.4.0")
+  stop("Install ggplot2 >= 3.4.0, restart R, and rerun setup.")
+if (!requireNamespace("posterior", quietly = TRUE))
+  stop("Install the posterior package and rerun setup.")
 
 # 2. JAGS itself ----
 # JAGS is a separate program, not an R package. Download it from

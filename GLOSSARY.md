@@ -22,7 +22,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **GRJ.** PIT detection site in the juvenile bypass at Lower Granite Dam.
 
-**GRS.** PIT detection site on the Lower Granite spillway.
+**GRS.** PIT detection array in spillbay 1 at Lower Granite. Its rows estimate read probability within that route, not the fraction of all nonguided fish using it.
 
 **Hatchery and wild (rear type).** Fish raised in a hatchery vs fish born in the river. Wild fish are usually the target, but most tagged fish are hatchery.
 
@@ -41,6 +41,14 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 **Stratum (strata).** A block of consecutive weeks grouped together.
 
 **Trap efficiency (p).** The chance a passing fish is caught by the trap. See also Efficiency trial. (In the dam scripts, p is the chance GRS reads a fish given that it wasn't guided into the bypass, whether it then went over the spillway or through the turbines. It is not the chance of being read given spillway passage.)
+
+**RSW (removable spillway weir).** A structure providing surface passage through a spillbay. At Lower Granite, it directs surface-oriented passage toward spillbay 1.
+
+**Sample rate.** Here, the fraction of time the trap sampling gates are open. Expanding by this rate assumes sampled periods represent passage during unsampled periods.
+
+**SCRAPI / SCRAPI2.** The smolt abundance and composition analysis workflows discussed in the talk. The teaching comparison holds GE fixed for SCRAPI-style bootstraps and carries GE posterior draws for SCRAPI2-style expansion. The examples omit several production steps.
+
+**smoltEASE.** The modeling code used for the talk's PIT-based guidance estimates, including hierarchical guidance, detection, recovery, and transport components. The scripts here are simplified teaching examples.
 
 ## Statistics terms
 
@@ -64,7 +72,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **Convex.** Curving upward, like 1 / p. Averaging a convex function gives more than applying it to the average (Jensen's inequality).
 
-**Coverage.** Over many simulated data sets, the share of 95% intervals that contain the truth. It should be about 95%.
+**Coverage.** Over many simulated data sets, the share of 95% intervals that contain the truth. It measures calibration under the simulated conditions. Nominal 95% Bayesian intervals do not guarantee 95% coverage at every fixed parameter value.
 
 **Credible interval.** A Bayesian interval: given the model and the data, the parameter is inside it with the stated probability. See also Posterior and Coverage.
 
@@ -82,7 +90,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **MCMC (Markov chain Monte Carlo).** The simulation method JAGS uses to draw samples from the posterior when there is no exact formula.
 
-**Multinomial.** Like a binomial with more than two outcomes: each fish lands in exactly one of several cells.
+**Multinomial.** The joint counts across mutually exclusive categories in a fixed number of independent trials with common category probabilities. Each fish has one categorical outcome; the counts across fish are multinomial.
 
 **n.eff.** How many independent draws the correlated MCMC draws are worth.
 
@@ -92,7 +100,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **Prior.** What you believe about a parameter before seeing the data.
 
-**Rhat.** Compares variation between chains to variation within chains. Near 1 means the chains agree; above about 1.1 means run longer or fix the model.
+**Rhat.** Compares variation between chains to variation within chains. Near 1 supports agreement. These lessons also check rank-normalized split Rhat <= 1.01, bulk/tail effective sample sizes >= 400, and trace plots. No single diagnostic proves convergence.
 
 **Sampling distribution.** All the estimates you could have gotten from repeating the same study under the same truth.
 
@@ -103,3 +111,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 **Thinning.** Keeping only every k-th MCMC draw to save memory.
 
 **Trace plot.** Each chain's draws plotted in order. Converged chains look like grassy, overlapping fuzz.
+
+**Lincoln-Petersen.** A capture-recapture estimator using the overlap between marked and subsequently sampled animals: the basic form is M*C/R. Corrections depend on the sampling design. The talk's Bailey modification is M*(C+1)/(R+1).
+
+**Simpson's paradox.** An aggregate comparison reverses the comparisons within its component groups because their proportions differ. In the talk, day and night GE both fall while pooled GE rises as night passage becomes more common.

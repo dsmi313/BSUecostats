@@ -16,7 +16,7 @@ New to Bayesian statistics? Start with [01_first_bayesian_model.R](01_first_baye
 
 - R (4.0 or later)
 - JAGS 4.x, installed separately from R: https://sourceforge.net/projects/mcmc-jags/
-- The jagsUI and ggplot2 packages: `install.packages(c("jagsUI", "ggplot2"))`
+- The jagsUI, ggplot2 (>= 3.4.0), and posterior packages: `install.packages(c("jagsUI", "ggplot2", "posterior"))`
 
 On Windows, install JAGS before jagsUI. If R can't find JAGS, restart R after installing it.
 
@@ -35,7 +35,9 @@ Run [00_setup.R](00_setup.R) first. It installs any missing packages, checks tha
 4. Begin with [01_first_bayesian_model.R](01_first_bayesian_model.R). Run one numbered lesson at a time, reading the comments and inspecting the plots.
 5. Keep the [glossary](GLOSSARY.md) handy; see [Using This Code](USING_THIS_CODE.md) to adapt an example.
 
-The numbered R scripts stay together so they can be run directly from this folder.
+The numbered R scripts and `helpers.R` stay together so they can be run directly from this folder. The helper checks rank-normalized split Rhat (<= 1.01), bulk/tail effective sample sizes (>= 400), and missing diagnostics. These are screening thresholds, not proof of convergence. Inspect trace plots and Monte Carlo error too.
+
+Simulation fits that error or fail diagnostics are retried once and counted if they still fail. Comparisons remain paired. Lesson 07 compares posterior-median abundance expansions because the wild-only inverse-GE mean can be infinite when no guided fish are observed.
 
 ## Levels
 
@@ -49,13 +51,13 @@ The numbered R scripts stay together so they can be run directly from this folde
 |---|---|---|
 | [00_setup.R](00_setup.R) | Installs packages, checks JAGS, runs a test model, and records versions. | |
 | [01_first_bayesian_model.R](01_first_bayesian_model.R) | Prior, likelihood, and posterior for one efficiency trial, solved exactly by hand, then the same model in JAGS. How to read JAGS output, trace plots, Rhat, and credible intervals. | Background for the whole talk |
-| [02_lincoln_petersen.R](02_lincoln_petersen.R) | Trap efficiency from an efficiency trial, catch expanded by efficiency, a +1 adjustment that removes small-sample bias, and Jensen's inequality. Plain R, no JAGS. | Screw traps; Jensen's inequality |
+| [02_lincoln_petersen.R](02_lincoln_petersen.R) | The slide's Bailey example and summing strata, then a separate efficiency-trial simulation with its own +1 correction and Jensen's inequality. Plain R, no JAGS. | Screw traps; Jensen's inequality |
 | [03_bernoulli_logit.R](03_bernoulli_logit.R) | A logit GLM in JAGS: each fish is a Bernoulli trial, and spill shifts guidance on the logit scale. | Why model GE on the logit scale |
 | [04_state_space_screwtrap.R](04_state_space_screwtrap.R) | A state-space model for daily screw trap passage. Counts alone estimate N × p; adding efficiency trials recovers N. Days with the trap out are estimated anyway. | Screw traps (extension) |
-| [05_six_cell.R](05_six_cell.R) | The multistate model at Lower Granite: six detection cells, conditioning on being detected, and a multinomial likelihood. Then two ways it goes wrong: fish tagged after the guidance decision inflate GE, and without a downstream site p and GE can't be separated. | Steps 3 and 4; Gotcha: fish tagged after the decision |
+| [05_six_cell.R](05_six_cell.R) | The multistate model at Lower Granite: six detection cells, conditioning on being detected, and a multinomial likelihood. Then two ways it goes wrong: fish tagged after the guidance decision inflate GE, and without a downstream site p and GE can't be separated. | Step 2: The Row Method; Steps 3 and 4; Tagged After Guidance: Not a Fair Sample |
 | [06_hierarchical.R](06_hierarchical.R) | Borrowing strength across weeks and rear types. Compares each wild week on its own to the hierarchical fit. | Borrow strength; the hierarchical GE regression |
 | [07_day_night.R](07_day_night.R) | Day and night: five cells split by passage time, c5 stays pooled, 11 cells in all. Shows why wild should borrow hatchery's day and night GE, not its pooled GE, when the two pass at night at different rates. | Splitting the cells by day and night; what splitting buys |
-| [08_bootstrap.R](08_bootstrap.R) | From GE to abundance: a bootstrap with GE held fixed vs one where every replicate carries its own GE draw. Coverage of each over 300 simulated weeks. Plain R, no JAGS. | Where SCRAPI's interval comes from; Jensen's inequality |
+| [08_bootstrap.R](08_bootstrap.R) | The slide's one-day fixed-GE bootstrap, then weekly fixed GE versus GE draws. Coverage of each over 300 simulated weeks. Plain R, no JAGS. | Where Bootstrap Intervals Come From; Jensen's inequality |
 | [09_recover_truth.R](09_recover_truth.R) | A small simulation study: bias and 95% interval coverage over 50 simulated data sets. | Does it recover GE? |
 
 Every lesson script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Run times are a few seconds to a few minutes; `04`, `06`, `07`, and `09` are the slowest. In `06` and `07`, the single example and its plot run by default. The repeated simulations are off: set `run.repeats <- TRUE` at the top of either script to add them.
@@ -87,3 +89,26 @@ Each script ends with a `Where BPA teaches this` section pointing to the matchin
 See [USING_THIS_CODE.md](USING_THIS_CODE.md) for how to adapt these models to your own data, including how to format raw detection histories into the arrays the models need, and a list of gotchas that bite real studies.
 
 **Before using any adapted model on real data, run it through [09_recover_truth.R](09_recover_truth.R).** It's a template, not just an exercise: if a model can't recover known values from simulated data, it won't recover unknown ones from yours.
+
+## Regression checks
+
+After setup, run `Rscript tests/audit_checks.R` from the repository root. These focused checks cover diagnostic failures, detection-history validation, and the finite median used for inverse-GE expansion. They do not replace running the lessons or the optional repeated simulation studies.
+
+## Matching the talk examples
+
+Use slide titles because slide numbers change as the deck develops.
+
+| Talk topic | Companion example and scope |
+|---|---|
+| We Control the Marks | `02`, section 0: Bailey's 9,533 example and sum across strata. The following independent-trial simulation uses a different correction. |
+| Where Bootstrap Intervals Come From | `08`, section 0: 130 caught, sample rate 0.25, GE 0.13, 2,000 replicates, 90% interval. The slide's 3,446–4,554 endpoints are from a particular simulation; without its RNG state, the new run need not match them. Exact binomial endpoints round to 3,446–4,585. |
+| Step 2: The Row Method | `05`, section 0: three rows with read probabilities 0.64, 0.61, 0.53 and a combined 0.934012. Row overlaps illustrate estimation under independent, equally readable fish. |
+| Most of the PIT Fish Are Hatchery | `06`, section 1b: an illustrative adjacent-week pooling rule requiring both c4+c5 > 10 and c3+c4 > 10, with a trailing group merged backward. The fitted simulation retains its fixed teaching strata. |
+| Simpson's Paradox | `07`, section 0: the toy reversal from 0.066 to 0.112. |
+| Lessons for Your Own Models: transport flags | `05`, section 9: missing flags alter transport/recovery but leave closed-form GE unchanged when GRJ records remain. The production GE-change claim requires a separate empirical comparison. |
+
+The talk's regression includes outflow; `06` uses spill only. The talk's day/night model extends that regression; `07` uses one week without covariates. The talk carries genetic stock-assignment uncertainty; `08` leaves it out along with composition resampling.
+
+Each lesson (`01`–`09`) ends with two or three **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. Answers are intentionally omitted; the exercise variants have not yet been run as part of this PR.
+
+Lesson `05`, section 3b, walks through the talk's MY2025 wild counts with plain division before introducing the multinomial: naive GE, a row-read correction, then the GOJ overlap correction. These season calculations are kept separate from the simulated JAGS data and from the production hierarchical estimates.

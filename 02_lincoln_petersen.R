@@ -22,6 +22,26 @@
 
 library(ggplot2)
 
+# 0. The talk's exact toy example: Bailey's modification ----
+# Keep the slide's estimator and numbers separate from the independent-trial
+# simulation below. Swapping M and C inside the +1 terms changes the estimator.
+bailey <- function(M, C, R) M * (C + 1) / (R + 1)
+slide.M <- 200; slide.C <- 1000; slide.R <- 20
+cat("Talk example, Bailey:", round(bailey(slide.M, slide.C, slide.R)),
+    "  plain Petersen:", slide.M * slide.C / slide.R, "\n")
+stopifnot(round(bailey(slide.M, slide.C, slide.R)) == 9533)
+# With multiple disjoint strata, apply the formula to each stratum and sum.
+# This second row is an additional hypothetical stratum, not a slide value.
+strata.example <- data.frame(stratum = 1:2, M = c(200, 100),
+                            C = c(1000, 400), R = c(20, 10))
+strata.example$N.bailey <- with(strata.example, bailey(M, C, R))
+print(strata.example)
+cat("Sum of stratum estimates:", sum(strata.example$N.bailey), "\n")
+# The remaining lesson uses a different design: C is an independent unmarked
+# binomial catch and R comes from a separate release trial. Its adjustment is
+# C*(M+1)/(R+1), which gives 9,571 for the slide inputs, NOT Bailey's 9,533.
+# The expectation identity below applies to that simulation's adjustment.
+
 set.seed(1)
 
 # 1. One stratum ----
@@ -98,6 +118,13 @@ p2 <- ggplot(data.frame(x = C / p.draws), aes(x)) +
   labs(title = "Expansion C / p over efficiency draws", x = "C / p", y = "Count") +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p2)
+
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set M <- 15 in the simulation. How many repeats have zero recaptures?
+#    What happens to the simple estimator and to the adjusted estimates?
+# 2. Set p <- 0.03. Does the +1 correction still give a mean close to truth?
+#    How does the printed expectation help interpret the simulation?
 
 # Lessons ----
 # - Trap efficiency comes from marked fish: R / M. Abundance is catch divided

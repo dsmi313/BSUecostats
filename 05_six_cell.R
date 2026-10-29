@@ -39,7 +39,33 @@
 # All data are simulated. Requires JAGS and the jagsUI package.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
+
+# 0. The row method: read efficiency within spillbay 1 ----
+# Toy row-read probabilities from "Step 2: The Row Method". A fish in the
+# monitored route crosses all three rows. Independent, equally readable
+# fish give d = 1 - product(1 - row probabilities).
+row.p <- c(0.64, 0.61, 0.53)
+row.d <- 1 - prod(1 - row.p)
+cat("Talk example, array read probability within bay 1:", row.d, "\n")
+# Observe only seven histories: 111, 110, 101, 011, 100, 010, 001.
+# The unseen 000 history is absent from the field data.
+set.seed(12)
+row.reads <- sapply(row.p, function(prob) rbinom(10000, 1, prob))
+row.seen <- row.reads[rowSums(row.reads) > 0, , drop = FALSE]
+print(table(apply(row.seen, 1, paste0, collapse = "")))
+# Row 2's reads supply the recapture sample for estimating row 1's p.
+# Other overlaps estimate rows 2 and 3. Conditional independence makes
+# these fractions valid despite the missing 000 fish.
+row.p.hat <- c(mean(row.seen[row.seen[, 2] == 1, 1]),
+               mean(row.seen[row.seen[, 1] == 1, 2]),
+               mean(row.seen[row.seen[, 2] == 1, 3]))
+row.d.hat <- 1 - prod(1 - row.p.hat)
+cat("Simulated row estimates:", row.p.hat, "  array d:", row.d.hat, "\n")
+# The rows estimate d, not the share q of nonguided fish using bay 1.
+# Whole-route detection p = q*d. Shared unreadability breaks independence
+# and can make the row method overstate d. GOJ supplies additional information.
 
 set.seed(4)
 
@@ -77,6 +103,12 @@ head(fish)
 # same cell column plus group and week columns.
 
 cell.of <- function(GRJ, GRS, GOJ, barged) {
+  flags <- list(GRJ, GRS, GOJ, barged)
+  if (length(unique(lengths(flags))) != 1L ||
+      anyNA(unlist(flags)) || !all(unlist(flags) %in% c(0, 1)))
+    stop("Detection and transport flags must be equally long, nonmissing 0/1 vectors.")
+  if (any(GRJ == 1 & GRS == 1) || any(barged == 1 & (GRJ != 1 | GRS == 1 | GOJ == 1)))
+    stop("History conflicts with the assumed routes. Resolve passage episodes before tabulating.")
   ifelse(barged == 1,             "c6",     # transported
   ifelse(GRJ == 1 & GOJ == 1,     "c2",     # GRJ and GOJ
   ifelse(GRJ == 1,                "c1",     # GRJ only
@@ -85,6 +117,7 @@ cell.of <- function(GRJ, GRS, GOJ, barged) {
   ifelse(GOJ == 1,                "c5",     # GOJ only
                                   NA))))))
 }
+stopifnot(!anyNA(fish$tag), !anyDuplicated(fish$tag))
 fish$cell <- cell.of(fish$GRJ, fish$GRS, fish$GOJ, fish$barged)
 stopifnot(!any(is.na(fish$cell)))            # every detected fish lands in a cell
 
@@ -113,6 +146,35 @@ guided <- n["c1"] + n["c2"] + n["c6"]
 nonguided.read <- n["c3"] + n["c4"]
 ge.hat <- guided / (guided + nonguided.read / p.hat)
 cat("Closed form: p-hat =", round(p.hat, 3), " GE =", round(ge.hat, 3), "\n")
+
+# 3b. The talk's MY2025 wild counts: GE before the multinomial ----
+# These are the season counts shown in the talk, not the simulated fish above.
+# Keep slide.* names so the JAGS example below still fits its simulated data.
+slide.counts <- c(c1 = 320, c2 = 35, c3 = 3662, c4 = 123, c5 = 195, c6 = 156)
+slide.guided <- sum(slide.counts[c("c1", "c2", "c6")])   # 511 GRJ / transported
+slide.grs <- sum(slide.counts[c("c3", "c4")])             # 3,785 GRS
+# Step 1: count only fish seen at GRJ or GRS.
+slide.ge.naive <- slide.guided / (slide.guided + slide.grs)
+# Step 2: correct read efficiency in spillbay 1 using the three-row example.
+# This still misses nonguided fish using other routes.
+slide.row.d <- 1 - prod(1 - c(0.64, 0.61, 0.53))
+slide.ge.rows <- slide.guided / (slide.guided + slide.grs / slide.row.d)
+# Step 3: GOJ-only fish reveal nonguided passage missed by GRS altogether.
+slide.p <- unname(slide.counts["c4"] / sum(slide.counts[c("c4", "c5")]))
+slide.ge.goj <- slide.guided / (slide.guided + slide.grs / slide.p)
+print(data.frame(step = c("GRJ and GRS only", "Correct bay-1 row reads", "Add GOJ recovery"),
+                 GE = c(slide.ge.naive, slide.ge.rows, slide.ge.goj)))
+cat("GRS detection from GOJ overlaps:", slide.p, "\n")
+# Step 4: distinguish transport from return to river and route recovery.
+cat("Transport fraction:", slide.counts["c6"] / slide.guided,
+    "  bypass recovery:", slide.counts["c2"] / sum(slide.counts[c("c1", "c2")]),
+    "  nonguided recovery:", slide.counts["c4"] / slide.grs, "\n")
+stopifnot(slide.guided == 511, slide.grs == 3785,
+          isTRUE(all.equal(round(c(slide.ge.naive, slide.ge.rows, slide.ge.goj), 2),
+                           c(0.12, 0.11, 0.05))))
+# The overlap calculation assumes GRS-read and GRS-missed nonguided fish
+# have the same downstream recovery probability. These are season-level
+# closed-form calculations, not the hierarchical day/night model estimates.
 
 # 4. JAGS model ----
 # Model in words: five probabilities (psi, p, trans, phi_S, and the bypass
@@ -149,7 +211,9 @@ for (cc in 1:6) {
 # Each detected fish is one roll of a six-sided die
 n[1:6] ~ dmulti(pi_obs[1:6], N_seen)
 
-# Derived: how many tagged fish reached the dam, detected or not
+# Expansion holding N_seen fixed: detection-probability uncertainty only.
+# This is not a full posterior for the number of tagged arrivals. That would
+# require an abundance model and a likelihood for the total detected count.
 N_total <- N_seen / p_seen
 }
 ")
@@ -164,14 +228,16 @@ fit <- jags(jags.data, inits, params, "six_cell.jags",
             n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2, parallel = TRUE)
 
 # 5. Compare to the truth ----
-cat("Max Rhat:", round(max(unlist(fit$Rhat), na.rm = TRUE), 3), "\n")
+print(fit_diagnostics(fit))
+if (!fit_ok(fit)) warning("fit: diagnostics need attention before interpreting results.")
+cat("Max Rhat:", round(fit_rhat(fit), 3), "\n")
 truth <- c(psi = psi, p = p, trans = trans, phi_S = phi_S, phi_B = phi_B)
 est <- sapply(names(truth), function(k) fit$mean[[k]])
 lo <- sapply(names(truth), function(k) quantile(fit$sims.list[[k]], 0.025))
 hi <- sapply(names(truth), function(k) quantile(fit$sims.list[[k]], 0.975))
 print(round(cbind(truth, estimate = est, lower = lo, upper = hi), 3))
-cat("Tagged fish reaching the dam: truth", n.tagged, " estimate", round(fit$mean$N_total),
-    " 95% CrI", round(quantile(fit$sims.list$N_total, c(0.025, 0.975))), "\n")
+cat("Expanded tagged passage (detection-probability uncertainty only): truth", n.tagged, " estimate", round(fit$mean$N_total),
+    " 95% expansion interval", round(quantile(fit$sims.list$N_total, c(0.025, 0.975))), "\n")
 
 # 6. Plot ----
 rec.df <- data.frame(par = factor(names(truth), levels = rev(names(truth))),
@@ -233,7 +299,7 @@ guided <- sum(n[c("c1", "c2", "c6")])
 grs <- sum(n[c("c3", "c4")])
 fit.nogoj <- jags(list(guided = guided, N_seen = guided + grs), NULL, c("psi", "p"), "no_goj.jags",
                   n.chains = 3, n.iter = 20000, n.burnin = 5000, n.thin = 5, parallel = TRUE)
-cat("\nMax Rhat without GOJ:", round(max(unlist(fit.nogoj$Rhat), na.rm = TRUE), 3), "\n")
+cat("\nMax Rhat without GOJ:", round(fit_rhat(fit.nogoj), 3), "\n")
 cat("p:   truth", p, "  with GOJ", round(fit$mean$p, 3), ci(fit$sims.list$p),
     "  without GOJ", round(fit.nogoj$mean$p, 3), ci(fit.nogoj$sims.list$p), "\n")
 cat("psi: truth", psi, "  with GOJ", round(fit$mean$psi, 3), ci(fit$sims.list$psi),
@@ -264,6 +330,39 @@ p3 <- ggplot(data.frame(p = fit.nogoj$sims.list$p, psi = fit.nogoj$sims.list$psi
   labs(title = "Without GOJ: psi and p trade off", x = "GRS detection p", y = "Guidance efficiency psi") +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p3)
+
+# 9. Incomplete transport flags: what this simple model can show ----
+# Suppose a barged fish retains its GRJ record but loses its transport flag.
+# It moves from c6 to c1, so it is still guided. This differs from losing the
+# fish entirely or assigning it to a different passage period.
+transport.summary <- function(counts) {
+  guided <- sum(counts[c("c1", "c2", "c6")])
+  phat <- counts["c4"] / (counts["c4"] + counts["c5"])
+  c(GE = unname(guided / (guided + sum(counts[c("c3", "c4")]) / phat)),
+    transport = unname(counts["c6"] / guided),
+    bypass.recovery = unname(counts["c2"] / sum(counts[c("c1", "c2")])))
+}
+n.flags.missing <- n
+n.flags.missing["c1"] <- n["c1"] + n["c6"]
+n.flags.missing["c6"] <- 0
+flag.check <- rbind(complete = transport.summary(n),
+                    missing = transport.summary(n.flags.missing))
+print(flag.check)
+stopifnot(isTRUE(all.equal(flag.check[1, "GE"], flag.check[2, "GE"])))
+# Closed-form GE is unchanged; transport and bypass recovery change. A full
+# hierarchical fit may respond differently through priors and shared effects.
+# This example does NOT establish the talk's empirical claim that incomplete
+# flags moved production GE substantially. That needs the production data
+# comparison. Always audit transport records and passage versus loading dates.
+
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set n.facility <- 5000. How far does estimated GE move from truth?
+#    Does the credible interval alert you to the tagging-site problem?
+# 2. In section 8 ONLY, change psi ~ dbeta(1, 1) to psi ~ dbeta(1, 9).
+#    Does p's posterior move even though its own prior and the data are unchanged?
+# 3. Set n.tagged <- 600. Which probability has the widest interval relative
+#    to its true value, and which detection histories became sparse?
 
 # Lessons ----
 # - The route a fish takes at the dam is hidden; the detection history is what

@@ -17,6 +17,7 @@
 # Teaching example; the numbers are made up.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(1)
@@ -121,12 +122,15 @@ fit <- jags(jags.data, inits = NULL, params, "first_model.jags",
 
 # 4. Reading the JAGS output ----
 print(fit)
+print(fit_diagnostics(fit))
+if (!fit_ok(fit)) warning("Diagnostics need attention before interpreting results.")
 # What the columns mean:
 # - mean, sd: the posterior mean and standard deviation of the draws
 # - 2.5%, 97.5%: the 95% credible interval from the draws
 # - Rhat: compares the spread between chains to the spread within chains.
-#   Near 1 means the chains agree. Above about 1.1 means run longer or fix
-#   the model (BPA 2.5).
+#   Near 1 means the chains agree. This is jagsUI's traditional Rhat.
+#   The shared diagnostic check also uses rank-normalized split Rhat <= 1.01
+#   and bulk/tail effective sample sizes >= 400 (BPA 2.6; 3.3.1 for background).
 # - n.eff: how many independent draws the correlated draws are worth
 # - deviance: a measure of fit that jagsUI adds; ignore it for now
 # jagsUI also prints overlap0, f, and DIC with its own short explanations.
@@ -183,13 +187,24 @@ cat("\nUnmarked catch:", C, "\n")
 cat("Expanded passage (efficiency uncertainty only), median:", round(median(N.draws)), "  95% interval:",
     round(quantile(N.draws, c(0.025, 0.975))), "\n")
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. In section 1, use M <- 10 and R <- 2. How much wider is the interval
+#    than with the original data, and how does the posterior mean move?
+# 2. With those small-sample data, replace the final print line in section 5
+#    with print(prior.table(10, 2)). How much does Beta(3, 17) change the mean
+#    and interval compared with the flat prior?
+# 3. Set C <- 1200 in section 6. What happens to expanded passage and its
+#    interval? Should the efficiency posterior itself change?
+
 # Lessons ----
 # - Prior x likelihood = posterior. A flat prior lets the data speak; an
 #   informative prior adds information and matters most when data are thin.
 # - JAGS doesn't solve the equations; it draws samples from the posterior.
 #   Summaries of the draws (mean, quantiles) are the estimates.
 # - Check convergence every time: Rhat near 1 and grassy, overlapping trace
-#   plots. More chains that agree is the evidence.
+#   plots, adequate bulk/tail effective sample sizes, and small Monte Carlo
+#   error for the summaries you report. These checks are evidence, not proof.
 # - A 95% credible interval is a probability statement about the parameter,
 #   given the model and data.
 # - Anything computed from a parameter (like C / p) gets its own distribution:
@@ -201,5 +216,5 @@ cat("Expanded passage (efficiency uncertainty only), median:", round(median(N.dr
 # Where BPA teaches this ----
 # - Chapter 2: Bayes rule, priors, and the posterior; 2.4 compares Bayesian
 #   credible intervals with frequentist confidence intervals; 2.5 covers
-#   MCMC, burn-in, Rhat, and thinning
+#   MCMC; 2.6 and 3.3.1 discuss burn-in, Rhat, and thinning
 # - 3.3.1: judging convergence from trace plots and Rhat on a first model

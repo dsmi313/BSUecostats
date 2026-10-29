@@ -23,6 +23,7 @@
 # Expect a few minutes. Requires JAGS and the jagsUI package.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(7)
@@ -59,6 +60,7 @@ n.tagged <- 3000
 pars <- c("psi", "p", "trans", "phi_S", "phi_B")
 results <- data.frame()
 rhat.all <- numeric()
+passed <- logical(n.reps)
 
 for (i in 1:n.reps) {
   truth <- c(psi = runif(1, 0.03, 0.30), p = runif(1, 0.25, 0.60), trans = runif(1, 0.3, 0.8),
@@ -70,19 +72,20 @@ for (i in 1:n.reps) {
                                 (1 - psi) * (1 - p) * (1 - phi_S)))
   n <- rmultinom(1, n.tagged, pr)[1:6, 1]
   # Fitting: this can take a few minutes.
-  fit <- jags(list(n = n, N_seen = sum(n)), NULL, c(pars, "delta"), "six_cell.jags",
+  fit <- safe_jags(list(n = n, N_seen = sum(n)), NULL, c(pars, "delta"), "six_cell.jags",
               n.chains = 3, n.iter = 4000, n.burnin = 1000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-  # If any Rhat is above 1.1, refit once with four times as many iterations
+  # If a fit errors or fails the Rhat/ESS checks, refit once with four times as many iterations
   # (same chains, same thinning, so four times the draws). Dropping hard data
   # sets without a retry would make the results look better than they are.
-  if (max(unlist(fit$Rhat), na.rm = TRUE) > 1.1)
-    fit <- jags(list(n = n, N_seen = sum(n)), NULL, c(pars, "delta"), "six_cell.jags",
+  if (!fit_ok(fit))
+    fit <- safe_jags(list(n = n, N_seen = sum(n)), NULL, c(pars, "delta"), "six_cell.jags",
                 n.chains = 3, n.iter = 16000, n.burnin = 4000, n.thin = 3, parallel = FALSE, verbose = FALSE)
   # Save convergence for every fit. Fits still failing after the retry are
   # left out and counted; the summary describes fits that passed diagnostics.
-  rhat <- max(unlist(fit$Rhat), na.rm = TRUE)
+  rhat <- fit_rhat(fit)
   rhat.all <- c(rhat.all, rhat)
-  if (rhat > 1.1) { cat("x", ""); next }
+  passed[i] <- fit_ok(fit)
+  if (!passed[i]) { cat("x", ""); next }
   for (k in pars) {
     d <- fit$sims.list[[k]]
     results <- rbind(results, data.frame(rep = i, par = k, truth = truth[k], est = mean(d),
@@ -93,7 +96,8 @@ for (i in 1:n.reps) {
 cat("\n")
 
 # 3. Summarize ----
-n.kept <- sum(rhat.all <= 1.1)
+n.kept <- sum(passed)
+if (!n.kept) stop("No fits passed diagnostics; inspect fit failures before summarizing.")
 cat("Fits failing diagnostics after a retry:", n.reps - n.kept, "of", n.reps,
     "(results below are among the", n.kept, "fits that passed)\n")
 results$covered <- results$lo <= results$truth & results$truth <= results$hi
@@ -118,6 +122,13 @@ p1 <- ggplot(results, aes(truth, est, color = status)) +
   labs(x = "Truth", y = "Estimate", title = "Estimate vs truth (dashed: 1:1 line)") +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p1)
+
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set n.tagged <- 500. Which parameters become less precise? Does any
+#    parameter's coverage deteriorate, and how many fits fail diagnostics?
+# 2. Set n.reps <- 200. How does the Monte Carlo uncertainty around coverage
+#    change, and does the ranking of parameter errors stay the same?
 
 # Lessons ----
 # - Simulate from known values, fit, and compare. If a model can't recover
