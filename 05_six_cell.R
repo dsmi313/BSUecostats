@@ -39,6 +39,7 @@
 # All data are simulated. Requires JAGS and the jagsUI package.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(4)
@@ -77,6 +78,12 @@ head(fish)
 # same cell column plus group and week columns.
 
 cell.of <- function(GRJ, GRS, GOJ, barged) {
+  flags <- list(GRJ, GRS, GOJ, barged)
+  if (length(unique(lengths(flags))) != 1L ||
+      anyNA(unlist(flags)) || !all(unlist(flags) %in% c(0, 1)))
+    stop("Detection and transport flags must be equally long, nonmissing 0/1 vectors.")
+  if (any(GRJ == 1 & GRS == 1) || any(barged == 1 & (GRJ != 1 | GRS == 1 | GOJ == 1)))
+    stop("History conflicts with the assumed routes. Resolve passage episodes before tabulating.")
   ifelse(barged == 1,             "c6",     # transported
   ifelse(GRJ == 1 & GOJ == 1,     "c2",     # GRJ and GOJ
   ifelse(GRJ == 1,                "c1",     # GRJ only
@@ -85,6 +92,7 @@ cell.of <- function(GRJ, GRS, GOJ, barged) {
   ifelse(GOJ == 1,                "c5",     # GOJ only
                                   NA))))))
 }
+stopifnot(!anyNA(fish$tag), !anyDuplicated(fish$tag))
 fish$cell <- cell.of(fish$GRJ, fish$GRS, fish$GOJ, fish$barged)
 stopifnot(!any(is.na(fish$cell)))            # every detected fish lands in a cell
 
@@ -149,7 +157,9 @@ for (cc in 1:6) {
 # Each detected fish is one roll of a six-sided die
 n[1:6] ~ dmulti(pi_obs[1:6], N_seen)
 
-# Derived: how many tagged fish reached the dam, detected or not
+# Expansion holding N_seen fixed: detection-probability uncertainty only.
+# This is not a full posterior for the number of tagged arrivals. That would
+# require an abundance model and a likelihood for the total detected count.
 N_total <- N_seen / p_seen
 }
 ")
@@ -164,14 +174,16 @@ fit <- jags(jags.data, inits, params, "six_cell.jags",
             n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2, parallel = TRUE)
 
 # 5. Compare to the truth ----
-cat("Max Rhat:", round(max(unlist(fit$Rhat), na.rm = TRUE), 3), "\n")
+print(fit_diagnostics(fit))
+if (!fit_ok(fit)) warning("fit: diagnostics need attention before interpreting results.")
+cat("Max Rhat:", round(fit_rhat(fit), 3), "\n")
 truth <- c(psi = psi, p = p, trans = trans, phi_S = phi_S, phi_B = phi_B)
 est <- sapply(names(truth), function(k) fit$mean[[k]])
 lo <- sapply(names(truth), function(k) quantile(fit$sims.list[[k]], 0.025))
 hi <- sapply(names(truth), function(k) quantile(fit$sims.list[[k]], 0.975))
 print(round(cbind(truth, estimate = est, lower = lo, upper = hi), 3))
-cat("Tagged fish reaching the dam: truth", n.tagged, " estimate", round(fit$mean$N_total),
-    " 95% CrI", round(quantile(fit$sims.list$N_total, c(0.025, 0.975))), "\n")
+cat("Expanded tagged passage (detection-probability uncertainty only): truth", n.tagged, " estimate", round(fit$mean$N_total),
+    " 95% expansion interval", round(quantile(fit$sims.list$N_total, c(0.025, 0.975))), "\n")
 
 # 6. Plot ----
 rec.df <- data.frame(par = factor(names(truth), levels = rev(names(truth))),
@@ -233,7 +245,7 @@ guided <- sum(n[c("c1", "c2", "c6")])
 grs <- sum(n[c("c3", "c4")])
 fit.nogoj <- jags(list(guided = guided, N_seen = guided + grs), NULL, c("psi", "p"), "no_goj.jags",
                   n.chains = 3, n.iter = 20000, n.burnin = 5000, n.thin = 5, parallel = TRUE)
-cat("\nMax Rhat without GOJ:", round(max(unlist(fit.nogoj$Rhat), na.rm = TRUE), 3), "\n")
+cat("\nMax Rhat without GOJ:", round(fit_rhat(fit.nogoj), 3), "\n")
 cat("p:   truth", p, "  with GOJ", round(fit$mean$p, 3), ci(fit$sims.list$p),
     "  without GOJ", round(fit.nogoj$mean$p, 3), ci(fit.nogoj$sims.list$p), "\n")
 cat("psi: truth", psi, "  with GOJ", round(fit$mean$psi, 3), ci(fit$sims.list$psi),

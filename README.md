@@ -16,7 +16,7 @@ New to Bayesian statistics? Start with [01_first_bayesian_model.R](01_first_baye
 
 - R (4.0 or later)
 - JAGS 4.x, installed separately from R: https://sourceforge.net/projects/mcmc-jags/
-- The jagsUI and ggplot2 packages: `install.packages(c("jagsUI", "ggplot2"))`
+- The jagsUI, ggplot2 (>= 3.4.0), and posterior packages: `install.packages(c("jagsUI", "ggplot2", "posterior"))`
 
 On Windows, install JAGS before jagsUI. If R can't find JAGS, restart R after installing it.
 
@@ -35,7 +35,9 @@ Run [00_setup.R](00_setup.R) first. It installs any missing packages, checks tha
 4. Begin with [01_first_bayesian_model.R](01_first_bayesian_model.R). Run one numbered lesson at a time, reading the comments and inspecting the plots.
 5. Keep the [glossary](GLOSSARY.md) handy; see [Using This Code](USING_THIS_CODE.md) to adapt an example.
 
-The numbered R scripts stay together so they can be run directly from this folder.
+The numbered R scripts and `helpers.R` stay together so they can be run directly from this folder. The helper checks rank-normalized split Rhat (<= 1.01), bulk/tail effective sample sizes (>= 400), and missing diagnostics. These are screening thresholds, not proof of convergence. Inspect trace plots and Monte Carlo error too.
+
+Simulation fits that error or fail diagnostics are retried once and counted if they still fail. Comparisons remain paired. Lesson 07 compares posterior-median abundance expansions because the wild-only inverse-GE mean can be infinite when no guided fish are observed.
 
 ## Levels
 
@@ -49,7 +51,7 @@ The numbered R scripts stay together so they can be run directly from this folde
 |---|---|---|
 | [00_setup.R](00_setup.R) | Installs packages, checks JAGS, runs a test model, and records versions. | |
 | [01_first_bayesian_model.R](01_first_bayesian_model.R) | Prior, likelihood, and posterior for one efficiency trial, solved exactly by hand, then the same model in JAGS. How to read JAGS output, trace plots, Rhat, and credible intervals. | Background for the whole talk |
-| [02_lincoln_petersen.R](02_lincoln_petersen.R) | Trap efficiency from an efficiency trial, catch expanded by efficiency, a +1 adjustment that removes small-sample bias, and Jensen's inequality. Plain R, no JAGS. | Screw traps; Jensen's inequality |
+| [02_lincoln_petersen.R](02_lincoln_petersen.R) | Trap efficiency from an efficiency trial, catch expanded by efficiency, a +1 adjustment that reduces small-sample bias, and Jensen's inequality. Plain R, no JAGS. | Screw traps; Jensen's inequality |
 | [03_bernoulli_logit.R](03_bernoulli_logit.R) | A logit GLM in JAGS: each fish is a Bernoulli trial, and spill shifts guidance on the logit scale. | Why model GE on the logit scale |
 | [04_state_space_screwtrap.R](04_state_space_screwtrap.R) | A state-space model for daily screw trap passage. Counts alone estimate N × p; adding efficiency trials recovers N. Days with the trap out are estimated anyway. | Screw traps (extension) |
 | [05_six_cell.R](05_six_cell.R) | The multistate model at Lower Granite: six detection cells, conditioning on being detected, and a multinomial likelihood. Then two ways it goes wrong: fish tagged after the guidance decision inflate GE, and without a downstream site p and GE can't be separated. | Steps 3 and 4; Gotcha: fish tagged after the decision |
@@ -87,3 +89,7 @@ Each script ends with a `Where BPA teaches this` section pointing to the matchin
 See [USING_THIS_CODE.md](USING_THIS_CODE.md) for how to adapt these models to your own data, including how to format raw detection histories into the arrays the models need, and a list of gotchas that bite real studies.
 
 **Before using any adapted model on real data, run it through [09_recover_truth.R](09_recover_truth.R).** It's a template, not just an exercise: if a model can't recover known values from simulated data, it won't recover unknown ones from yours.
+
+## Regression checks
+
+After setup, run `Rscript tests/audit_checks.R` from the repository root. These focused checks cover diagnostic failures, detection-history validation, and the finite median used for inverse-GE expansion. They do not replace running the lessons or the optional repeated simulation studies.

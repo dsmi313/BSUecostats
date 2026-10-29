@@ -17,8 +17,8 @@
 #   mu_strat[g]     ~ Normal(alpha, sigma_strat)
 #
 #   r = rear type (1 wild, 2 hatchery), s = week, g(s) = the week's stratum
-#   rear_psi: fixed offsets, centered to sum to zero (two levels are too few
-#             for a random effect; BPA 4.1.4)
+#   rear_psi: fixed offsets, centered to sum to zero (with only two levels,
+#             a group variance is poorly informed; BPA 4.1.4)
 #   beta <= 0: spill can only lower guidance
 #
 # Weeks shrink toward their stratum; strata shrink toward the season average.
@@ -41,6 +41,7 @@
 # Requires JAGS and the jagsUI and ggplot2 packages.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(6)
@@ -226,8 +227,12 @@ fit1 <- jags(jags.data1, inits1, params1, "ge_separate.jags",
 fit2 <- jags(jags.data2, inits2, params2, "ge_hierarchical.jags",
              n.chains = 3, n.iter = 10000, n.burnin = 5000, n.thin = 5, parallel = TRUE)
 
-cat("Max Rhat, separate:    ", round(max(unlist(fit1$Rhat), na.rm = TRUE), 3), "\n")
-cat("Max Rhat, hierarchical:", round(max(unlist(fit2$Rhat), na.rm = TRUE), 3), "\n")
+print(fit_diagnostics(fit1))
+if (!fit_ok(fit1)) warning("fit1: diagnostics need attention before interpreting results.")
+print(fit_diagnostics(fit2))
+if (!fit_ok(fit2)) warning("fit2: diagnostics need attention before interpreting results.")
+cat("Max Rhat, separate:    ", round(fit_rhat(fit1), 3), "\n")
+cat("Max Rhat, hierarchical:", round(fit_rhat(fit2), 3), "\n")
 
 # Wild weekly GE: posterior mean and 95% CrI for each week
 wild1 <- fit1$sims.list$psi[, 1, ]     # draws x weeks, wild only
@@ -262,8 +267,9 @@ print(p1)
 # Only runs if run.repeats is TRUE (set near the top of the script). It's
 # FALSE by default, so this whole section is skipped unless you turn it on.
 # Pool every wild week from every season and ask how each model does as a
-# function of how many wild fish were tagged that week. A fit with any Rhat
-# above 1.1 is refit with four times as many iterations. Seasons where either model still
+# function of how many wild fish were tagged that week. Errors, missing
+# diagnostics, Rhat > 1.01, or bulk/tail ESS < 400 trigger one longer refit.
+# Seasons where either model still
 # fails are left out of BOTH models, so the comparison stays paired, and the
 # failure rate is printed. Results describe fits that passed diagnostics; if
 # many fail, the hard data sets are the ones missing, and the summary looks
@@ -273,26 +279,28 @@ if (run.repeats) {
   n.reps <- 20
   rhats <- matrix(NA, 0, 2, dimnames = list(NULL, c("separate", "hierarchical")))
   all.weeks <- data.frame()
+  passed <- logical(n.reps)
   for (i in 1:n.reps) {
     ssn <- simulate.season()
     d1 <- list(n = ssn$n, N_seen = ssn$N_seen, R = R, S = S)
     d2 <- list(n = ssn$n, N_seen = ssn$N_seen, R = R, S = S,
                parent = parent, n_strat = n_strat, spill_std = ssn$spill_std)
-    f1 <- jags(d1, inits1, params1, "ge_separate.jags", n.chains = 3,
+    f1 <- safe_jags(d1, inits1, params1, "ge_separate.jags", n.chains = 3,
                n.iter = 6000, n.burnin = 3000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    f2 <- jags(d2, inits2, params2, "ge_hierarchical.jags", n.chains = 3,
+    f2 <- safe_jags(d2, inits2, params2, "ge_hierarchical.jags", n.chains = 3,
                n.iter = 6000, n.burnin = 3000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    # If either fit has any Rhat above 1.1, refit it once with four times as
+    # If either fit errors or fails diagnostics, refit it once with four times as
     # many iterations (same chains, same thinning, so four times the draws).
-    if (max(unlist(f1$Rhat), na.rm = TRUE) > 1.1)
-      f1 <- jags(d1, inits1, params1, "ge_separate.jags", n.chains = 3,
+    if (!fit_ok(f1))
+      f1 <- safe_jags(d1, inits1, params1, "ge_separate.jags", n.chains = 3,
                  n.iter = 24000, n.burnin = 12000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    if (max(unlist(f2$Rhat), na.rm = TRUE) > 1.1)
-      f2 <- jags(d2, inits2, params2, "ge_hierarchical.jags", n.chains = 3,
+    if (!fit_ok(f2))
+      f2 <- safe_jags(d2, inits2, params2, "ge_hierarchical.jags", n.chains = 3,
                  n.iter = 24000, n.burnin = 12000, n.thin = 3, parallel = FALSE, verbose = FALSE)
-    r1 <- max(unlist(f1$Rhat), na.rm = TRUE); r2 <- max(unlist(f2$Rhat), na.rm = TRUE)
+    r1 <- fit_rhat(f1); r2 <- fit_rhat(f2)
     rhats <- rbind(rhats, c(r1, r2))
-    if (max(r1, r2) > 1.1) { cat("x", ""); next }
+    passed[i] <- fit_ok(f1) && fit_ok(f2)
+    if (!passed[i]) { cat("x", ""); next }
     for (m in 1:2) {
       d <- if (m == 1) f1$sims.list$psi[, 1, ] else f2$sims.list$psi[, 1, ]
       w <- data.frame(mean = colMeans(d), lo = apply(d, 2, quantile, 0.025), hi = apply(d, 2, quantile, 0.975))
@@ -303,9 +311,10 @@ if (run.repeats) {
     cat(i, "")
   }
   cat("\n")
-  cat("Seasons failing diagnostics after a retry:", sum(apply(rhats, 1, max) > 1.1), "of", n.reps,
+  cat("Seasons failing diagnostics after a retry:", sum(!passed), "of", n.reps,
       "(left out of both models; results below are among fits passing diagnostics)\n")
 
+  if (!any(passed)) stop("No paired seasons passed diagnostics; inspect fit failures before summarizing.")
   all.weeks$abs.error <- abs(all.weeks$mean - all.weeks$truth)
   all.weeks$width <- all.weeks$hi - all.weeks$lo
   all.weeks$covered <- all.weeks$lo <= all.weeks$truth & all.weeks$truth <= all.weeks$hi
@@ -336,8 +345,8 @@ if (run.repeats) {
 #   by their own fish, and the two models agree there.
 # - Shrinkage has a cost: a week that really is unusual gets pulled toward
 #   its stratum too. Check coverage to see whether the trade is honest.
-# - Two rear types are too few for a random effect, so rear offsets are fixed
-#   and centered (BPA 4.1.4).
+# - With two rear types, a group variance is poorly informed, so we choose
+#   fixed, centered rear offsets (BPA 4.1.4).
 
 # Where BPA teaches this ----
 # - 4.1  Introduction to random effects, including when a factor has too few

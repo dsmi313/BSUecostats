@@ -64,7 +64,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **Convex.** Curving upward, like 1 / p. Averaging a convex function gives more than applying it to the average (Jensen's inequality).
 
-**Coverage.** Over many simulated data sets, the share of 95% intervals that contain the truth. It should be about 95%.
+**Coverage.** Over many simulated data sets, the share of 95% intervals that contain the truth. It measures calibration under the simulated conditions. Nominal 95% Bayesian intervals do not guarantee 95% coverage at every fixed parameter value.
 
 **Credible interval.** A Bayesian interval: given the model and the data, the parameter is inside it with the stated probability. See also Posterior and Coverage.
 
@@ -82,7 +82,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **MCMC (Markov chain Monte Carlo).** The simulation method JAGS uses to draw samples from the posterior when there is no exact formula.
 
-**Multinomial.** Like a binomial with more than two outcomes: each fish lands in exactly one of several cells.
+**Multinomial.** The joint counts across mutually exclusive categories in a fixed number of independent trials with common category probabilities. Each fish has one categorical outcome; the counts across fish are multinomial.
 
 **n.eff.** How many independent draws the correlated MCMC draws are worth.
 
@@ -92,7 +92,7 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **Prior.** What you believe about a parameter before seeing the data.
 
-**Rhat.** Compares variation between chains to variation within chains. Near 1 means the chains agree; above about 1.1 means run longer or fix the model.
+**Rhat.** Compares variation between chains to variation within chains. Near 1 supports agreement. These lessons also check rank-normalized split Rhat <= 1.01, bulk/tail effective sample sizes >= 400, and trace plots. No single diagnostic proves convergence.
 
 **Sampling distribution.** All the estimates you could have gotten from repeating the same study under the same truth.
 
