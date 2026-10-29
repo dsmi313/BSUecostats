@@ -105,10 +105,10 @@ Use slide titles because slide numbers change as the deck develops.
 | Step 2: The Row Method | `05`, section 0: three rows with read probabilities 0.64, 0.61, 0.53 and a combined 0.934012. Row overlaps illustrate estimation under independent, equally readable fish. |
 | Most of the PIT Fish Are Hatchery | `06`, section 1b: an illustrative adjacent-week pooling rule requiring both c4+c5 > 10 and c3+c4 > 10, with a trailing group merged backward. The fitted simulation retains its fixed teaching strata. |
 | Simpson's Paradox | `07`, section 0: the toy reversal from 0.066 to 0.112. |
-| Lessons for Your Own Models: transport flags | `05`, section 9: missing flags alter transport/recovery but leave closed-form GE unchanged when GRJ records remain. The production GE-change claim requires a separate empirical comparison. |
+| Lessons for Your Own Models: transport flags | `05`, section 9: missing flags leave GE unchanged but drag bypass recovery down, because barged fish look like bypassed fish that never reached GOJ. |
 
 The talk's regression includes outflow; `06` uses spill only. The talk's day/night model extends that regression; `07` uses one week without covariates. The talk carries genetic stock-assignment uncertainty; `08` leaves it out along with composition resampling.
 
-Each lesson (`01`–`09`) ends with two or three **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. Answers are intentionally omitted; the exercise variants have not yet been run as part of this PR.
+Each lesson (`01`–`09`) ends with two or three **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. Answers are intentionally omitted.
 
 Lesson `05`, section 3b, walks through the talk's MY2025 wild counts with plain division before introducing the multinomial: naive GE, a row-read correction, then the GOJ overlap correction. These season calculations are kept separate from the simulated JAGS data and from the production hierarchical estimates.

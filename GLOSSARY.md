@@ -32,23 +32,23 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **PTAGIS.** The public database of PIT tag detections in the Columbia River basin: https://www.ptagis.org/
 
-**Screw trap.** A floating, rotating cone in a river that catches a fraction of the fish passing it.
-
-**Smolt.** A young salmon or steelhead migrating to the ocean.
-
-**Spill.** Water released over the spillway instead of through the turbines. More spill tends to send more fish over the spillway and fewer into the bypass.
-
-**Stratum (strata).** A block of consecutive weeks grouped together.
-
-**Trap efficiency (p).** The chance a passing fish is caught by the trap. See also Efficiency trial. (In the dam scripts, p is the chance GRS reads a fish given that it wasn't guided into the bypass, whether it then went over the spillway or through the turbines. It is not the chance of being read given spillway passage.)
-
 **RSW (removable spillway weir).** A structure providing surface passage through a spillbay. At Lower Granite, it directs surface-oriented passage toward spillbay 1.
 
 **Sample rate.** Here, the fraction of time the trap sampling gates are open. Expanding by this rate assumes sampled periods represent passage during unsampled periods.
 
 **SCRAPI / SCRAPI2.** The smolt abundance and composition analysis workflows discussed in the talk. The teaching comparison holds GE fixed for SCRAPI-style bootstraps and carries GE posterior draws for SCRAPI2-style expansion. The examples omit several production steps.
 
+**Screw trap.** A floating, rotating cone in a river that catches a fraction of the fish passing it.
+
+**Smolt.** A young salmon or steelhead migrating to the ocean.
+
 **smoltEASE.** The modeling code used for the talk's PIT-based guidance estimates, including hierarchical guidance, detection, recovery, and transport components. The scripts here are simplified teaching examples.
+
+**Spill.** Water released over the spillway instead of through the turbines. More spill tends to send more fish over the spillway and fewer into the bypass.
+
+**Stratum (strata).** A block of consecutive weeks grouped together.
+
+**Trap efficiency (p).** The chance a passing fish is caught by the trap. See also Efficiency trial. (In the dam scripts, p is the chance GRS reads a fish given that it wasn't guided into the bypass, whether it then went over the spillway or through the turbines. It is not the chance of being read given spillway passage.)
 
 ## Statistics terms
 
@@ -86,6 +86,8 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **Likelihood.** How probable the observed data are for each possible parameter value.
 
+**Lincoln-Petersen.** A capture-recapture estimator using the overlap between marked and subsequently sampled animals: the basic form is M*C/R. Corrections depend on the sampling design. The talk's Bailey modification is M*(C+1)/(R+1).
+
 **Logit.** log(p / (1 − p)). It maps probabilities (0 to 1) onto the whole number line, so effects can be added without pushing a probability past 0 or 1.
 
 **MCMC (Markov chain Monte Carlo).** The simulation method JAGS uses to draw samples from the posterior when there is no exact formula.
@@ -106,12 +108,10 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **Shrinkage.** In a hierarchical model, a group's estimate pulled toward the average of all groups. See also Hierarchical model and Complete pooling vs partial pooling.
 
+**Simpson's paradox.** An aggregate comparison reverses the comparisons within its component groups because their proportions differ. In the talk, day and night GE both fall while pooled GE rises as night passage becomes more common.
+
 **State-space model.** A model with two parts: a process model for the true state over time, and an observation model for what you actually measure.
 
 **Thinning.** Keeping only every k-th MCMC draw to save memory.
 
 **Trace plot.** Each chain's draws plotted in order. Converged chains look like grassy, overlapping fuzz.
-
-**Lincoln-Petersen.** A capture-recapture estimator using the overlap between marked and subsequently sampled animals: the basic form is M*C/R. Corrections depend on the sampling design. The talk's Bailey modification is M*(C+1)/(R+1).
-
-**Simpson's paradox.** An aggregate comparison reverses the comparisons within its component groups because their proportions differ. In the talk, day and night GE both fall while pooled GE rises as night passage becomes more common.

@@ -25,8 +25,11 @@ fit_diagnostics <- function(fit) {
       extended[, , dim(extended)[3]] <- inverse
       draws <- extended
     }
+    # Pass the functions themselves: measure names given as strings are looked
+    # up by name, so a variable called rhat in the workspace would break them.
     posterior::summarise_draws(posterior::as_draws_array(draws),
-                              "rhat", "ess_bulk", "ess_tail", "mcse_median")
+                              rhat = posterior::rhat, ess_bulk = posterior::ess_bulk,
+                              ess_tail = posterior::ess_tail, mcse_median = posterior::mcse_median)
   }, error = function(e) NULL)
 }
 

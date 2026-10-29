@@ -331,7 +331,7 @@ p3 <- ggplot(data.frame(p = fit.nogoj$sims.list$p, psi = fit.nogoj$sims.list$psi
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p3)
 
-# 9. Incomplete transport flags: what this simple model can show ----
+# 9. Incomplete transport flags: why the transport cell is there ----
 # Suppose a barged fish retains its GRJ record but loses its transport flag.
 # It moves from c6 to c1, so it is still guided. This differs from losing the
 # fish entirely or assigning it to a different passage period.
@@ -349,11 +349,10 @@ flag.check <- rbind(complete = transport.summary(n),
                     missing = transport.summary(n.flags.missing))
 print(flag.check)
 stopifnot(isTRUE(all.equal(flag.check[1, "GE"], flag.check[2, "GE"])))
-# Closed-form GE is unchanged; transport and bypass recovery change. A full
-# hierarchical fit may respond differently through priors and shared effects.
-# This example does NOT establish the talk's empirical claim that incomplete
-# flags moved production GE substantially. That needs the production data
-# comparison. Always audit transport records and passage versus loading dates.
+# That's the point: GE doesn't change, bypass recovery does. Unflagged barged
+# fish look like bypassed fish that never reached GOJ, so bypass recovery
+# drops. The transport cell keeps bypass recovery close to what the data
+# actually do. Audit transport records and passage versus loading dates.
 
 # Try this ----
 # Predict before rerunning; reset each change before trying the next.
