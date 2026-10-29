@@ -223,6 +223,13 @@ p2 <- ggplot(p.df, aes(day)) +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p2)
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Change trap.out <- 41:45 to trap.out <- 31:55. How do the passage
+#    intervals inside the outage compare with the observed days?
+# 2. Change M <- rep(30, length(trial.days)) to use 10 marked fish per trial.
+#    Which quantities become less precise, and do both fits pass diagnostics?
+
 # Lessons ----
 # - A state-space model separates the process (how many fish really pass each
 #   day) from the observation (how many the trap catches).

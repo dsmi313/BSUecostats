@@ -149,6 +149,13 @@ p2 <- ggplot(int.df, aes(y = week, xmin = 100 * (lo / N.week - 1), xmax = 100 * 
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p2)
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set n.pit <- 100 in the weekly experiment. How do the widths and
+#    coverage of the fixed-GE and GE-draw intervals change?
+# 2. Set B <- 200. How stable are interval endpoints and the reported
+#    coverage compared with the original 2,000-replicate run?
+
 # Lessons ----
 # - An interval has to carry the uncertainty of every estimated input. Holding
 #   GE fixed gives an interval that is far too narrow and misses the truth

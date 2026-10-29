@@ -119,6 +119,13 @@ p2 <- ggplot(data.frame(x = C / p.draws), aes(x)) +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p2)
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set M <- 15 in the simulation. How many repeats have zero recaptures?
+#    What happens to the simple estimator and to the adjusted estimates?
+# 2. Set p <- 0.03. Does the +1 correction still give a mean close to truth?
+#    How does the printed expectation help interpret the simulation?
+
 # Lessons ----
 # - Trap efficiency comes from marked fish: R / M. Abundance is catch divided
 #   by efficiency, so every error in efficiency carries straight into N.

@@ -108,3 +108,7 @@ Use slide titles because slide numbers change as the deck develops.
 | Lessons for Your Own Models: transport flags | `05`, section 9: missing flags alter transport/recovery but leave closed-form GE unchanged when GRJ records remain. The production GE-change claim requires a separate empirical comparison. |
 
 The talk's regression includes outflow; `06` uses spill only. The talk's day/night model extends that regression; `07` uses one week without covariates. The talk carries genetic stock-assignment uncertainty; `08` leaves it out along with composition resampling.
+
+Each lesson (`01`–`09`) ends with two or three **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. Answers are intentionally omitted; the exercise variants have not yet been run as part of this PR.
+
+Lesson `05`, section 3b, walks through the talk's MY2025 wild counts with plain division before introducing the multinomial: naive GE, a row-read correction, then the GOJ overlap correction. These season calculations are kept separate from the simulated JAGS data and from the production hierarchical estimates.

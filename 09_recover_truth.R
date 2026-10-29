@@ -123,6 +123,13 @@ p1 <- ggplot(results, aes(truth, est, color = status)) +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p1)
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set n.tagged <- 500. Which parameters become less precise? Does any
+#    parameter's coverage deteriorate, and how many fits fail diagnostics?
+# 2. Set n.reps <- 200. How does the Monte Carlo uncertainty around coverage
+#    change, and does the ranking of parameter errors stay the same?
+
 # Lessons ----
 # - Simulate from known values, fit, and compare. If a model can't recover
 #   known values, it won't recover unknown ones.

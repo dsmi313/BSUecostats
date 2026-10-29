@@ -147,6 +147,35 @@ nonguided.read <- n["c3"] + n["c4"]
 ge.hat <- guided / (guided + nonguided.read / p.hat)
 cat("Closed form: p-hat =", round(p.hat, 3), " GE =", round(ge.hat, 3), "\n")
 
+# 3b. The talk's MY2025 wild counts: GE before the multinomial ----
+# These are the season counts shown in the talk, not the simulated fish above.
+# Keep slide.* names so the JAGS example below still fits its simulated data.
+slide.counts <- c(c1 = 320, c2 = 35, c3 = 3662, c4 = 123, c5 = 195, c6 = 156)
+slide.guided <- sum(slide.counts[c("c1", "c2", "c6")])   # 511 GRJ / transported
+slide.grs <- sum(slide.counts[c("c3", "c4")])             # 3,785 GRS
+# Step 1: count only fish seen at GRJ or GRS.
+slide.ge.naive <- slide.guided / (slide.guided + slide.grs)
+# Step 2: correct read efficiency in spillbay 1 using the three-row example.
+# This still misses nonguided fish using other routes.
+slide.row.d <- 1 - prod(1 - c(0.64, 0.61, 0.53))
+slide.ge.rows <- slide.guided / (slide.guided + slide.grs / slide.row.d)
+# Step 3: GOJ-only fish reveal nonguided passage missed by GRS altogether.
+slide.p <- unname(slide.counts["c4"] / sum(slide.counts[c("c4", "c5")]))
+slide.ge.goj <- slide.guided / (slide.guided + slide.grs / slide.p)
+print(data.frame(step = c("GRJ and GRS only", "Correct bay-1 row reads", "Add GOJ recovery"),
+                 GE = c(slide.ge.naive, slide.ge.rows, slide.ge.goj)))
+cat("GRS detection from GOJ overlaps:", slide.p, "\n")
+# Step 4: distinguish transport from return to river and route recovery.
+cat("Transport fraction:", slide.counts["c6"] / slide.guided,
+    "  bypass recovery:", slide.counts["c2"] / sum(slide.counts[c("c1", "c2")]),
+    "  nonguided recovery:", slide.counts["c4"] / slide.grs, "\n")
+stopifnot(slide.guided == 511, slide.grs == 3785,
+          isTRUE(all.equal(round(c(slide.ge.naive, slide.ge.rows, slide.ge.goj), 2),
+                           c(0.12, 0.11, 0.05))))
+# The overlap calculation assumes GRS-read and GRS-missed nonguided fish
+# have the same downstream recovery probability. These are season-level
+# closed-form calculations, not the hierarchical day/night model estimates.
+
 # 4. JAGS model ----
 # Model in words: five probabilities (psi, p, trans, phi_S, and the bypass
 # penalty delta) multiply along the branches of the detection tree to give
@@ -325,6 +354,15 @@ stopifnot(isTRUE(all.equal(flag.check[1, "GE"], flag.check[2, "GE"])))
 # This example does NOT establish the talk's empirical claim that incomplete
 # flags moved production GE substantially. That needs the production data
 # comparison. Always audit transport records and passage versus loading dates.
+
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set n.facility <- 5000. How far does estimated GE move from truth?
+#    Does the credible interval alert you to the tagging-site problem?
+# 2. In section 8 ONLY, change psi ~ dbeta(1, 1) to psi ~ dbeta(1, 9).
+#    Does p's posterior move even though its own prior and the data are unchanged?
+# 3. Set n.tagged <- 600. Which probability has the widest interval relative
+#    to its true value, and which detection histories became sparse?
 
 # Lessons ----
 # - The route a fish takes at the dam is hidden; the detection history is what

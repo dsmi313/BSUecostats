@@ -187,6 +187,16 @@ cat("\nUnmarked catch:", C, "\n")
 cat("Expanded passage (efficiency uncertainty only), median:", round(median(N.draws)), "  95% interval:",
     round(quantile(N.draws, c(0.025, 0.975))), "\n")
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. In section 1, use M <- 10 and R <- 2. How much wider is the interval
+#    than with the original data, and how does the posterior mean move?
+# 2. With those small-sample data, replace the final print line in section 5
+#    with print(prior.table(10, 2)). How much does Beta(3, 17) change the mean
+#    and interval compared with the flat prior?
+# 3. Set C <- 1200 in section 6. What happens to expanded passage and its
+#    interval? Should the efficiency posterior itself change?
+
 # Lessons ----
 # - Prior x likelihood = posterior. A flat prior lets the data speak; an
 #   informative prior adds information and matters most when data are thin.

@@ -389,6 +389,15 @@ if (run.repeats) {
   print(p2)
 }
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set a.true <- c(wild = 0.09, hatchery = 0.09). Does borrowing pooled
+#    GE still cause the same systematic mismatch?
+# 2. Set night_eff <- 0 in the true values. Does a difference in night share
+#    still create a difference in true pooled GE?
+# 3. Set n.tagged <- c(wild = 20, hatchery = 6000). What happens to wild-only
+#    uncertainty and zero-guided weeks? Check diagnostics before comparisons.
+
 # Lessons ----
 # - Guidance can differ sharply by time of day. Pooled GE mixes guidance with
 #   timing: it moves whenever the night share moves.

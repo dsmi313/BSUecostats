@@ -372,6 +372,14 @@ if (run.repeats) {
   print(p2)
 }
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. In the wild n.tagged line, replace log(150) with log(1500), increasing
+#    the upper end of the wild sample-size range. Does the hierarchical
+#    advantage shrink in the better-sampled weeks? Are all weeks now thick?
+# 2. Set sigma_psi <- 0.8 in the simulation. How does stronger week-to-week
+#    variation change shrinkage, interval widths, and the comparison?
+
 # Lessons ----
 # - Thin groups borrow strength from the rest: a thin wild week gets pulled
 #   toward its stratum and the spill effect, which hatchery fish pin down.

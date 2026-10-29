@@ -96,6 +96,11 @@ p1 <- ggplot(curve.df, aes(spill)) +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p1)
 
+# Try this ----
+# Predict before rerunning; reset each change before trying the next.
+# 1. Set n.fish <- 50. Does the interval for b1 still exclude zero?
+# 2. Set b1 <- 0. What should happen to the fitted curve and its uncertainty?
+
 # Lessons ----
 # - Each fish is a Bernoulli trial: guided or not. That is the noise part of
 #   the GLM.
