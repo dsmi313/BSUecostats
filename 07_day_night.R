@@ -389,6 +389,38 @@ if (run.repeats) {
   print(p2)
 }
 
+# 6. Does the prior matter? ----
+# The wild-alone model puts a flat Beta(1, 1) prior on GE: every value from 0
+# to 1 equally likely. Biologists know wild steelhead GE at this dam is low,
+# so a weakly informative Beta(1, 9) (prior mean 0.10, worth about 10 fish)
+# is defensible. Refit this week's wild fish under both priors, then do the
+# same for a week with only 20 wild fish. A prior matters most where the data
+# are thinnest, and a change of prior is worth reporting either way.
+prior.model <- sub("psi ~ dbeta(1, 1)", "psi ~ dbeta(a.psi, b.psi)",
+                   readLines("wild_alone.jags"), fixed = TRUE)
+writeLines(prior.model, "wild_alone_prior.jags")
+
+thin.wild <- rmultinom(1, 20, cell.probs(a.true["wild"]))[, 1]
+thin.n6 <- c(thin.wild[1] + thin.wild[6], thin.wild[2] + thin.wild[7], thin.wild[3] + thin.wild[8],
+             thin.wild[4] + thin.wild[9], thin.wild[11], thin.wild[5] + thin.wild[10])
+prior.runs <- expand.grid(prior = c("Flat Beta(1, 1)", "Beta(1, 9)"),
+                          wild.tagged = c(n.tagged["wild"], 20), stringsAsFactors = FALSE)
+prior.table <- do.call(rbind, lapply(seq_len(nrow(prior.runs)), function(i) {
+  ab <- if (prior.runs$prior[i] == "Beta(1, 9)") c(1, 9) else c(1, 1)
+  counts <- if (prior.runs$wild.tagged[i] == 20) thin.n6 else wk$n6[1, ]
+  f <- jags(list(n = counts, N_seen = sum(counts), a.psi = ab[1], b.psi = ab[2]), NULL,
+            params.alone, "wild_alone_prior.jags",
+            n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2, parallel = TRUE)
+  if (!fit_ok(f)) warning("prior refit: diagnostics need attention before interpreting results.")
+  data.frame(prior.runs[i, ], detected = sum(counts),
+             GE = round(mean(f$sims.list$wild_ge), 3),
+             lower = round(quantile(f$sims.list$wild_ge, 0.025), 3),
+             upper = round(quantile(f$sims.list$wild_ge, 0.975), 3),
+             abundance.error.pct = round(abund.error(f), 1), row.names = NULL)
+}))
+cat("True wild GE:", round(ge.true["wild"], 3), "\n")
+print(prior.table)
+
 # Try this ----
 # Predict before rerunning; reset each change before trying the next.
 # 1. Set a.true <- c(wild = 0.09, hatchery = 0.09). Does borrowing pooled

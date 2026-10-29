@@ -239,6 +239,22 @@ print(round(cbind(truth, estimate = est, lower = lo, upper = hi), 3))
 cat("Expanded tagged passage (detection-probability uncertainty only): truth", n.tagged, " estimate", round(fit$mean$N_total),
     " 95% expansion interval", round(quantile(fit$sims.list$N_total, c(0.025, 0.975))), "\n")
 
+# 5b. The talk's MY2025 counts in JAGS ----
+# Same model, real data: the six season counts from section 3b. The posterior
+# mean of psi should sit near the closed-form 0.05, now with an interval.
+fit.slide <- jags(list(n = as.vector(slide.counts), N_seen = sum(slide.counts)), inits, params,
+                  "six_cell.jags", n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2,
+                  parallel = TRUE)
+if (!fit_ok(fit.slide)) warning("fit.slide: diagnostics need attention before interpreting results.")
+slide.est <- t(sapply(c("psi", "p", "trans", "phi_S", "phi_B"), function(k)
+  c(mean = mean(fit.slide$sims.list[[k]]), quantile(fit.slide$sims.list[[k]], c(0.025, 0.975)))))
+print(round(slide.est, 3))
+cat("Closed-form GE from section 3b:", round(slide.ge.goj, 3), "\n")
+# Six cells sum to N_seen, so the counts carry five free numbers, and the
+# model has five parameters. It can match nearly any set of counts, so
+# these data can't test whether it fits. Checking fit needs spare
+# information: 06_hierarchical.R, section 7, has a check across many weeks.
+
 # 6. Plot ----
 rec.df <- data.frame(par = factor(names(truth), levels = rev(names(truth))),
                      truth = truth, est = est, lo = lo, hi = hi)

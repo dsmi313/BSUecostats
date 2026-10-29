@@ -64,7 +64,7 @@ sigma_psi <- 0.3
 trans <- 0.60; phi_S <- 0.50; delta <- 0.40; p <- 0.40
 phi_B <- plogis(qlogis(phi_S) - delta)
 
-simulate.season <- function() {
+simulate.season <- function(p.week = rep(p, S)) {
   mu_strat <- rnorm(n_strat, alpha, sigma_strat)
   spill <- runif(S, 0.2, 0.6)
   spill_std <- (spill - mean(spill)) / sd(spill)
@@ -86,11 +86,11 @@ simulate.season <- function() {
   for (r in 1:R) for (s in 1:S) {
     pr <- c(psi[r, s] * (1 - trans) * (1 - phi_B),
             psi[r, s] * (1 - trans) * phi_B,
-            (1 - psi[r, s]) * p * (1 - phi_S),
-            (1 - psi[r, s]) * p * phi_S,
-            (1 - psi[r, s]) * (1 - p) * phi_S,
+            (1 - psi[r, s]) * p.week[s] * (1 - phi_S),
+            (1 - psi[r, s]) * p.week[s] * phi_S,
+            (1 - psi[r, s]) * (1 - p.week[s]) * phi_S,
             psi[r, s] * trans,
-            (1 - psi[r, s]) * (1 - p) * (1 - phi_S))
+            (1 - psi[r, s]) * (1 - p.week[s]) * (1 - phi_S))
     n[r, s, ] <- rmultinom(1, n.tagged[r, s], pr)[1:6, 1]
   }
   list(n = n, N_seen = apply(n, c(1, 2), sum), psi = psi, spill_std = spill_std, n.tagged = n.tagged)
@@ -371,6 +371,76 @@ if (run.repeats) {
     theme_bw(base_size = 13) + theme(legend.position = "top")
   print(p2)
 }
+
+# 7. Does the model fit the data? ----
+# Recovering truth (09_recover_truth.R) checks the model on data it generated
+# itself. Real data can break an assumption the model makes. A posterior
+# predictive check asks whether the observed counts look like counts the
+# fitted model would produce (BPA 7.10.2, Freeman-Tukey statistic). For each
+# posterior draw, JAGS simulates a new data set from the fitted model and
+# scores the observed and the new counts against their expected values. The
+# Bayesian p-value is the share of draws where the new data fit worse. Near
+# 0.5 is fine; near 0 or 1 means the data don't look like the model.
+# The check needs spare information: here 32 rear-weeks share detection,
+# transport, and recovery. A single six-cell table can't be checked this way
+# (05_six_cell.R, section 5b).
+
+ppc.lines <- "
+# Fit check: observed counts vs counts simulated from the fitted model
+for (r in 1:R) {
+   for (s in 1:S) {
+      n.new[r,s,1:6] ~ dmulti(pi_obs[r,s,1:6], N_seen[r,s])
+      for (cc in 1:6) {
+         E[r,s,cc] <- pi_obs[r,s,cc] * N_seen[r,s]
+         ft.obs[r,s,cc] <- pow(sqrt(n[r,s,cc]) - sqrt(E[r,s,cc]), 2)
+         ft.new[r,s,cc] <- pow(sqrt(n.new[r,s,cc]) - sqrt(E[r,s,cc]), 2)
+         }
+      }
+   }
+fit.obs <- sum(ft.obs[,,])
+fit.new <- sum(ft.new[,,])
+"
+# Same hierarchical model as section 3, with the check added before its last brace
+hier <- readLines("ge_hierarchical.jags")
+last <- max(which(trimws(hier) == "}"))
+writeLines(c(hier[1:(last - 1)], ppc.lines, hier[last:length(hier)]), "ge_hierarchical_ppc.jags")
+
+ppc.fit <- function(ssn) {
+  jags(list(n = ssn$n, N_seen = ssn$N_seen, R = R, S = S, parent = parent,
+            n_strat = n_strat, spill_std = ssn$spill_std),
+       inits2, c(params2, "fit.obs", "fit.new"), "ge_hierarchical_ppc.jags",
+       n.chains = 3, n.iter = 10000, n.burnin = 5000, n.thin = 5, parallel = TRUE)
+}
+bayes.p <- function(f) mean(f$sims.list$fit.new > f$sims.list$fit.obs)
+
+# The season from section 4: simulated from this model, so it should fit
+fit.ok.season <- ppc.fit(season)
+if (!fit_ok(fit.ok.season)) warning("fit.ok.season: diagnostics need attention before interpreting results.")
+
+# A season that breaks one assumption: GRS detection climbs over the season
+# (from about 0.13 to 0.75) while the model holds it constant
+p.rising <- plogis(qlogis(p) + seq(-1.5, 1.5, length.out = S))
+season.bad <- simulate.season(p.week = p.rising)
+fit.bad.season <- ppc.fit(season.bad)
+if (!fit_ok(fit.bad.season)) warning("fit.bad.season: diagnostics need attention before interpreting results.")
+
+print(data.frame(season = c("Constant GRS detection (matches model)", "Rising GRS detection"),
+                 bayesian.p = round(c(bayes.p(fit.ok.season), bayes.p(fit.bad.season)), 3)))
+# A failed check says an assumption is wrong, not how far the estimates moved.
+# Find which assumption before trusting them.
+
+p.ppc <- ggplot(rbind(data.frame(season = "Constant GRS detection", obs = fit.ok.season$sims.list$fit.obs,
+                                 new = fit.ok.season$sims.list$fit.new),
+                      data.frame(season = "Rising GRS detection", obs = fit.bad.season$sims.list$fit.obs,
+                                 new = fit.bad.season$sims.list$fit.new)),
+                aes(obs, new)) +
+  geom_point(alpha = 0.3, size = 0.8, color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  facet_wrap(~ season, scales = "free") +
+  labs(title = "Posterior predictive check (points below the line: data fit worse than the model's own)",
+       x = "Discrepancy, observed counts", y = "Discrepancy, simulated counts") +
+  theme_bw(base_size = 13)
+print(p.ppc)
 
 # Try this ----
 # Predict before rerunning; reset each change before trying the next.
