@@ -16,7 +16,6 @@
 # All data are simulated. Requires JAGS and the jagsUI package.
 
 library(jagsUI)
-source("helpers.R")
 library(ggplot2)
 
 set.seed(2)
@@ -64,9 +63,7 @@ print(fit)
 # Trace plots: each chain's draws in order. Look for grassy, overlapping fuzz.
 traceplot(fit, parameters = c("b0", "b1"))
 
-print(fit_diagnostics(fit))
-if (!fit_ok(fit)) warning("fit: diagnostics need attention before interpreting results.")
-cat("Max Rhat:", round(fit_rhat(fit), 3), "\n")
+cat("Max Rhat:", round(max(unlist(fit$Rhat), na.rm = TRUE), 3), "\n")
 cat("b0: truth", b0, " estimate", round(fit$mean$b0, 2),
     " 95% CrI", round(quantile(fit$sims.list$b0, c(0.025, 0.975)), 2), "\n")
 cat("b1: truth", b1, " estimate", round(fit$mean$b1, 2),
