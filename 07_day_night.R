@@ -45,7 +45,10 @@
 # MCMC average would misleadingly print a finite answer. We therefore use
 # the same median-based abundance summary for all three methods.
 #
-# Teaching version: one week at a time, no covariates. Section 5 repeats the
+# Teaching version: one week at a time, no covariates. The talk adds a night
+# offset to the hierarchical daytime regression (including spill and outflow).
+# Here daytime GE is a single probability, so this is not that regression.
+# Section 5 repeats the
 # week 100 times (300 more model fits, several minutes). It's off by default:
 # set run.repeats to TRUE below to run it.
 # All data are simulated. Requires JAGS and the jagsUI and ggplot2 packages.
@@ -53,6 +56,17 @@
 library(jagsUI)
 source("helpers.R")
 library(ggplot2)
+
+# 0. Simpson's paradox: the talk's two-week toy table ----
+simpson <- data.frame(week = c("A", "B"), fish = c(1000, 1000),
+                      day.ge = c(0.04, 0.02), night.ge = c(0.30, 0.25),
+                      night.share = c(0.10, 0.40))
+simpson$pooled.ge <- with(simpson, (1 - night.share) * day.ge + night.share * night.ge)
+simpson$guided <- simpson$fish * simpson$pooled.ge
+print(simpson)
+stopifnot(isTRUE(all.equal(simpson$pooled.ge, c(0.066, 0.112))))
+# Both within-period rates fall, but pooled GE rises because the timing mix
+# changes. This illustrates aggregation, not an estimated causal spill effect.
 
 set.seed(6)
 

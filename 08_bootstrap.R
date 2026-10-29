@@ -23,9 +23,35 @@
 # Teaching version: plain R, no JAGS. The GE posterior here is a Beta from a
 # simple PIT sample, standing in for the posterior draws from 05 to 07.
 # Real SCRAPI also resamples measured fish for the composition splits; that
-# part is left out. All data are simulated.
+# part is left out, including posterior genetic stock-assignment uncertainty
+# shown in the talk. This example carries catch and GE uncertainty only.
+# All data are simulated.
 
 library(ggplot2)
+
+# 0. The talk's one-day fixed-GE bootstrap ----
+# Same inputs as "Where Bootstrap Intervals Come From". This section uses a
+# 90% interval; the weekly coverage experiment below deliberately uses 95%.
+set.seed(20261029)
+slide.catch <- 130
+slide.rate <- 0.25
+slide.ge <- 0.13
+slide.B <- 2000
+slide.p <- slide.rate * slide.ge
+slide.passage <- slide.catch / slide.p
+slide.catches <- rbinom(slide.B, round(slide.passage), slide.p)
+slide.expanded <- slide.catches / slide.p
+cat("Talk example: passage", slide.passage, "from", slide.catch, "caught\n")
+cat("First bootstrap catches:", head(slide.catches), "\n")
+cat("Simulated middle 90%:", round(quantile(slide.expanded, c(0.05, 0.95))), "\n")
+# The slide reports 3,446 to 4,554 from a particular 2,000-replicate run.
+# Its RNG state was not supplied. These finite-simulation endpoints can vary.
+# The exact binomial quantiles are a reproducible reference, not a bootstrap:
+slide.exact <- qbinom(c(0.05, 0.95), round(slide.passage), slide.p) / slide.p
+cat("Exact binomial middle-90% endpoints:", round(slide.exact), "\n")
+# Exact endpoints round to 3,446 and 4,585. Do not label the slide's simulated
+# upper endpoint (4,554) as an exact quantile or tune a seed to force agreement.
+stopifnot(abs(slide.passage - 4000) < 1e-8)
 
 set.seed(8)
 

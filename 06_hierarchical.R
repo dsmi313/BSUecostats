@@ -33,7 +33,8 @@
 #   Model 2: hierarchical
 # Both models share detection, transport, and survival across all rear-weeks;
 # only the guidance part differs. Teaching version: those shared pieces are
-# held constant over the season.
+# held constant over the season. The talk also includes an outflow covariate;
+# this example keeps spill only so the borrowing mechanism is easier to see.
 #
 # Section 6 repeats the season 20 times so the gain isn't one lucky draw.
 # Section 6 is off by default: set run.repeats to TRUE below to run it.
@@ -52,7 +53,7 @@ run.repeats <- FALSE   # TRUE adds section 6, the 20-season repeat (a few minute
 
 R <- 2                                   # 1 = wild, 2 = hatchery
 S <- 16                                  # weeks
-parent <- rep(1:4, each = 4)             # stratum of each week
+parent <- rep(1:4, each = 4)             # fixed teaching strata; see section 1b
 n_strat <- 4
 
 alpha <- -2.0
@@ -94,6 +95,36 @@ simulate.season <- function() {
   }
   list(n = n, N_seen = apply(n, c(1, 2), sum), psi = psi, spill_std = spill_std, n.tagged = n.tagged)
 }
+
+# 1b. Choosing strata from sparse wild histories ----
+# The talk pools adjacent weeks until BOTH c4+c5 > 10 and c3+c4 > 10.
+# This illustrative greedy rule starts at the first week, closes a stratum
+# as soon as both thresholds pass, and merges a short final tail backward.
+# Production implementations may add other constraints or boundary rules.
+choose_strata <- function(c3, c4, c5, threshold = 10) {
+  stopifnot(length(c3) > 0L, length(c3) == length(c4), length(c4) == length(c5),
+            length(threshold) == 1L, is.finite(threshold), threshold >= 0)
+  x <- cbind(c3, c4, c5)
+  stopifnot(all(is.finite(x)), all(x >= 0), all(x == floor(x)))
+  group <- integer(nrow(x))
+  g <- 1L; detection <- recovery <- 0
+  for (s in seq_len(nrow(x))) {
+    group[s] <- g
+    detection <- detection + c4[s] + c5[s]
+    recovery <- recovery + c3[s] + c4[s]
+    if (detection > threshold && recovery > threshold) {
+      g <- g + 1L
+      detection <- recovery <- 0
+    }
+  }
+  if (group[length(group)] == g && g > 1L) group[group == g] <- g - 1L
+  if (sum(c4 + c5) <= threshold || sum(c3 + c4) <= threshold)
+    warning("Even the full season fails the count rule; pooling cannot create information.")
+  group
+}
+# The simulation and fits below retain matching, fixed four-week strata to
+# isolate hierarchical borrowing. The count-based mapping is demonstrated
+# separately, rather than silently changing the data-generating structure.
 
 # 2. Model 1: every rear-week on its own ----
 # Model in words: each rear-week gets its own GE with a flat prior; nothing
@@ -198,6 +229,9 @@ for (r in 1:R) {
 
 season <- simulate.season()
 print(season$N_seen)
+
+count.parent <- choose_strata(season$n[1, , 3], season$n[1, , 4], season$n[1, , 5])
+print(data.frame(week = 1:S, teaching.stratum = parent, count.rule.stratum = count.parent))
 
 # Data for each model
 jags.data1 <- list(n = season$n, N_seen = season$N_seen, R = R, S = S)

@@ -42,6 +42,31 @@ library(jagsUI)
 source("helpers.R")
 library(ggplot2)
 
+# 0. The row method: read efficiency within spillbay 1 ----
+# Toy row-read probabilities from "Step 2: The Row Method". A fish in the
+# monitored route crosses all three rows. Independent, equally readable
+# fish give d = 1 - product(1 - row probabilities).
+row.p <- c(0.64, 0.61, 0.53)
+row.d <- 1 - prod(1 - row.p)
+cat("Talk example, array read probability within bay 1:", row.d, "\n")
+# Observe only seven histories: 111, 110, 101, 011, 100, 010, 001.
+# The unseen 000 history is absent from the field data.
+set.seed(12)
+row.reads <- sapply(row.p, function(prob) rbinom(10000, 1, prob))
+row.seen <- row.reads[rowSums(row.reads) > 0, , drop = FALSE]
+print(table(apply(row.seen, 1, paste0, collapse = "")))
+# Row 2's reads supply the recapture sample for estimating row 1's p.
+# Other overlaps estimate rows 2 and 3. Conditional independence makes
+# these fractions valid despite the missing 000 fish.
+row.p.hat <- c(mean(row.seen[row.seen[, 2] == 1, 1]),
+               mean(row.seen[row.seen[, 1] == 1, 2]),
+               mean(row.seen[row.seen[, 2] == 1, 3]))
+row.d.hat <- 1 - prod(1 - row.p.hat)
+cat("Simulated row estimates:", row.p.hat, "  array d:", row.d.hat, "\n")
+# The rows estimate d, not the share q of nonguided fish using bay 1.
+# Whole-route detection p = q*d. Shared unreadability breaks independence
+# and can make the row method overstate d. GOJ supplies additional information.
+
 set.seed(4)
 
 # 1. Simulate one record per tagged fish ----
@@ -276,6 +301,30 @@ p3 <- ggplot(data.frame(p = fit.nogoj$sims.list$p, psi = fit.nogoj$sims.list$psi
   labs(title = "Without GOJ: psi and p trade off", x = "GRS detection p", y = "Guidance efficiency psi") +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p3)
+
+# 9. Incomplete transport flags: what this simple model can show ----
+# Suppose a barged fish retains its GRJ record but loses its transport flag.
+# It moves from c6 to c1, so it is still guided. This differs from losing the
+# fish entirely or assigning it to a different passage period.
+transport.summary <- function(counts) {
+  guided <- sum(counts[c("c1", "c2", "c6")])
+  phat <- counts["c4"] / (counts["c4"] + counts["c5"])
+  c(GE = unname(guided / (guided + sum(counts[c("c3", "c4")]) / phat)),
+    transport = unname(counts["c6"] / guided),
+    bypass.recovery = unname(counts["c2"] / sum(counts[c("c1", "c2")])))
+}
+n.flags.missing <- n
+n.flags.missing["c1"] <- n["c1"] + n["c6"]
+n.flags.missing["c6"] <- 0
+flag.check <- rbind(complete = transport.summary(n),
+                    missing = transport.summary(n.flags.missing))
+print(flag.check)
+stopifnot(isTRUE(all.equal(flag.check[1, "GE"], flag.check[2, "GE"])))
+# Closed-form GE is unchanged; transport and bypass recovery change. A full
+# hierarchical fit may respond differently through priors and shared effects.
+# This example does NOT establish the talk's empirical claim that incomplete
+# flags moved production GE substantially. That needs the production data
+# comparison. Always audit transport records and passage versus loading dates.
 
 # Lessons ----
 # - The route a fish takes at the dam is hidden; the detection history is what
