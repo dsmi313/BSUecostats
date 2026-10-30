@@ -4,7 +4,7 @@
 
 Companion code for the BSU ecological statistics group talk on IDFG mark-recapture, from screw traps to Lower Granite Dam.
 
-**[View the presentation slides](https://docs.google.com/presentation/d/1t2OOFYyH-QrZKkhVpIfSck41ejtzsgCnnv2lWwjo-_E/edit?slide=id.p1#slide=id.p1)**
+**[View the presentation slides](https://docs.google.com/presentation/d/1oUBGKKDx5jiRbfvwGtDFsreYjDw0KO_JpvS4nJRO8xY/edit?slide=id.p19#slide=id.p19)**
 
 Most scripts simulate data from known values, fit a model, and check the answer against the truth. Start at 01 and work up: each step adds one idea.
 
