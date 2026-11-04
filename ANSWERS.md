@@ -97,7 +97,7 @@ All 20 paired seasons pass after the allowed retries. Within these seasons:
 
 Sharing helps most in the thinnest weeks in this simulation. Weeks within a season are related, and only 20 seasons were simulated; do not treat every week as an independent replicate when quantifying Monte Carlo uncertainty.
 
-The additional rising-detection predictive-check fit *after* the optional loop fails Rhat for p (1.013). That is a different fit from the 20 paired comparisons and the validated default predictive check. Its printed Bayesian p-value should not be interpreted before longer sampling. The warning is retained in the validation records.
+The additional rising-detection predictive-check fit *after* the optional loop fails Rhat for p (1.013) at the script's 10,000 iterations. That is a different fit from the 20 paired comparisons and the default predictive check. Rerunning with 40,000 iterations and 20,000 burn-in for the two predictive-check fits only (validation case `06_repeats_long`) reproduces the same 20 seasons and table above, and all four direct fits then pass (largest Rhat 1.007). The matching season gives Bayesian p 0.445. The rising-detection season gives 0.000: its observed discrepancy (95% CrI 73–83) sits well above the simulated discrepancy (38–57), correctly flagging the mismatch. The original warning is retained in the validation records.
 
 ## 07 Day and Night
 
