@@ -41,7 +41,7 @@ Times and printed numbers come from running each script unchanged on 4 November 
 
 - [06_hierarchical.R](06_hierarchical.R): borrowing strength across weeks and rear types, with a posterior predictive check. *15–30 seconds.* Prints weekly GE error 0.102 fitting each week alone vs 0.049 hierarchical. [Plot](figures/06_hierarchical.png)
 - [07_day_night.R](07_day_night.R): splitting cells by day and night, and why wild should borrow hatchery's split GE, not its pooled GE. *Under 10 seconds.* Prints truth 0.069; wild alone 0.122, borrow pooled 0.047, borrow split 0.083. [Plot](figures/07_day_night.png)
-- [07a_day_night_closed_form.R](07a_day_night_closed_form.R): the talk's 2,000-season day/night simulation. No JAGS. *About 5 seconds.* Prints median season error +33.3% pooled vs +1.3% split, and saves [the slide figure](figures/day_night_borrowing.png).
+- [07a_day_night_closed_form.R](07a_day_night_closed_form.R): the talk's season day/night GE (1% by day, 26% at night) and its 2,000-season day/night simulation. No JAGS. *About 5 seconds.* Prints median season error +33.3% pooled vs +1.3% split, and saves [the slide figure](figures/day_night_borrowing.png).
 - [08_bootstrap.R](08_bootstrap.R): bootstrap intervals with GE fixed vs GE drawn. No JAGS. *About 10 seconds.* Prints 95% coverage 36% vs 95.3%. [Plot](figures/08_bootstrap.png)
 - [09_recover_truth.R](09_recover_truth.R): a simulation study of bias and coverage over 50 data sets. Use it as a template before trusting an adapted model on real data. *30–45 seconds.* Prints 48 of 50 fits passing, GE coverage 95.8%. [Plot](figures/09_recover_truth.png)
 

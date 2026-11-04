@@ -11,6 +11,7 @@ Which script reproduces each slide, and the simulation settings behind the dam e
 | Step 2: The Row Method | `05`, section 0: three rows with read probabilities 0.64, 0.61, 0.53 and a combined 0.934012. Row overlaps illustrate estimation under independent, equally readable fish. |
 | Most of the PIT Fish Are Hatchery | `06`, section 1b: an illustrative adjacent-week pooling rule requiring both c4+c5 > 10 and c3+c4 > 10, with a trailing group merged backward. The fitted simulation retains its fixed teaching strata. |
 | Simpson's Paradox | `07`, section 0: the toy reversal from 0.066 to 0.112. |
+| Day and Night GE Are Very Different | `07a`, section 0: MY2025 wild season cells split by LGR passage time (PTAGIS times as PST), adding back to the 05 section 3b totals. One season GOJ-overlap detection gives GE 1.0% by day and 25.9% at night, with 16.0% of fish passing at night. |
 | What Splitting Buys: A Simulation With Known Truth | `07a`: the eight-week, 2,000-season closed-form simulation. Use its generated PNG and season CSV together so the plot and slide numbers match. Failures are counted explicitly. |
 | Lessons for Your Own Models: transport flags | `05`, section 9: missing flags leave GE unchanged but drag bypass recovery down, because barged fish look like bypassed fish that never reached GOJ. |
 
