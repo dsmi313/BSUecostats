@@ -19,7 +19,8 @@
 #   r = rear type (1 wild, 2 hatchery), s = week, g(s) = the week's stratum
 #   rear_psi: fixed offsets, centered to sum to zero (with only two levels,
 #             a group variance is poorly informed; BPA 4.1.4)
-#   beta <= 0: spill can only lower guidance
+#   beta <= 0: an imposed direction restriction, not a conclusion from data
+#   Set restrict.spill <- FALSE below to allow either direction.
 #
 # Weeks shrink toward their stratum; strata shrink toward the season average.
 # Hatchery fish pin down the strata, the spill slope, and how much weeks
@@ -35,6 +36,9 @@
 # only the guidance part differs. Teaching version: those shared pieces are
 # held constant over the season. The talk also includes an outflow covariate;
 # this example keeps spill only so the borrowing mechanism is easier to see.
+# Guidance now has the familiar linear predictor from 03, with group effects.
+# Detection and recovery are intercept-only components. The multinomial
+# histories connect all of them; they are not separate fits to known routes.
 #
 # Section 6 repeats the season 20 times so the gain isn't one lucky draw.
 # Section 6 is off by default: set run.repeats to TRUE below to run it.
@@ -48,6 +52,7 @@ library(ggplot2)
 set.seed(6)
 
 run.repeats <- FALSE   # TRUE adds section 6, the 20-season repeat (a few minutes)
+restrict.spill <- TRUE # Prior support beta <= 0; FALSE allows either direction
 
 # 1. Simulate a season ----
 
@@ -61,8 +66,11 @@ sigma_strat <- 0.5
 rear_psi <- c(-0.2, 0.2)                 # centered: sums to zero
 beta <- -0.8
 sigma_psi <- 0.3
-trans <- 0.60; phi_S <- 0.50; delta <- 0.40; p <- 0.40
-phi_B <- plogis(qlogis(phi_S) - delta)
+trans <- 0.60; p <- 0.40
+recovery <- dam_recovery_defaults()
+phi_S <- unname(recovery["phi_S"])  # about 3.25%, survival times GOJ detection
+phi_B <- unname(recovery["phi_B"])  # about 9.86%, after return to river
+delta <- qlogis(phi_S) - qlogis(phi_B)  # signed route contrast
 
 simulate.season <- function(p.week = rep(p, S)) {
   mu_strat <- rnorm(n_strat, alpha, sigma_strat)
@@ -182,7 +190,7 @@ sigma_strat ~ dunif(0, 3)
 sigma_psi ~ dunif(0, 3)
 tau_strat <- pow(sigma_strat, -2)
 tau_psi <- pow(sigma_psi, -2)
-beta ~ dnorm(0, 0.1) T(, 0)                  # spill can only lower GE
+beta ~ dnorm(0, 0.1) T(, 0)                  # imposed nonpositive slope
 
 # rear offsets: fixed, centered to sum to zero
 for (r in 1:R) { rear_raw[r] ~ dnorm(0, 0.1) }
@@ -225,6 +233,15 @@ for (r in 1:R) {
 }
 ")
 
+# Compare prior assumptions using the same simulated data and likelihood.
+# The posterior under the restricted model CANNOT support a positive slope.
+if (!restrict.spill) {
+  model.lines <- readLines("ge_hierarchical.jags")
+  model.lines <- sub("beta ~ dnorm(0, 0.1) T(, 0)", "beta ~ dnorm(0, 0.1)",
+                     model.lines, fixed = TRUE)
+  writeLines(model.lines, "ge_hierarchical.jags")
+}
+
 # 4. One season ----
 
 season <- simulate.season()
@@ -240,9 +257,13 @@ jags.data2 <- list(n = season$n, N_seen = season$N_seen, R = R, S = S,
 
 # Initial values
 inits1 <- function() list(psi = matrix(runif(R * S, 0.05, 0.3), R, S), p = runif(1, 0.2, 0.8),
-                          trans = runif(1, 0.2, 0.8), phi_S = runif(1, 0.2, 0.8))
-inits2 <- function() list(alpha = rnorm(1, -2, 0.5), beta = -runif(1, 0, 1), p = runif(1, 0.2, 0.8),
-                          trans = runif(1, 0.2, 0.8), phi_S = runif(1, 0.2, 0.8),
+                          trans = runif(1, 0.2, 0.8), phi_S = runif(1, 0.01, 0.08),
+                          delta = rnorm(1, -1.2, 0.5))
+inits2 <- function() list(alpha = rnorm(1, -2, 0.5),
+                          beta = if (restrict.spill) -runif(1, 0, 1) else rnorm(1, 0, 0.5),
+                          p = runif(1, 0.2, 0.8),
+                          trans = runif(1, 0.2, 0.8), phi_S = runif(1, 0.01, 0.08),
+                          delta = rnorm(1, -1.2, 0.5),
                           sigma_strat = runif(1, 0.1, 1), sigma_psi = runif(1, 0.1, 1))
 
 # Parameters to save. The shared and variance parameters are saved too, so
@@ -449,6 +470,10 @@ print(p.ppc)
 #    advantage shrink in the better-sampled weeks? Are all weeks now thick?
 # 2. Set sigma_psi <- 0.8 in the simulation. How does stronger week-to-week
 #    variation change shrinkage, interval widths, and the comparison?
+# 3. Set restrict.spill <- FALSE. The same data can now support a positive
+#    spill slope. Compare beta, wild GE, and diagnostics with the restricted fit.
+#    Then set the simulation's beta <- 0.4 and compare both prior choices.
+#    Can the restricted model recover a positive slope it excludes in advance?
 
 # Lessons ----
 # - Thin groups borrow strength from the rest: a thin wild week gets pulled

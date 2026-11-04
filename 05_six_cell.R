@@ -14,9 +14,15 @@
 # Guided fish are barged (trans) or returned to the river. Nonguided fish are
 # read at the spillway array GRS with probability p. Some are read again
 # downstream at Little Goose (GOJ).
-#   phi_B, phi_S: the chance a bypassed (B) or spilled (S) fish survives to GOJ
+#   phi_B, phi_S: the chance a bypassed (B) or nonguided (S) fish survives to GOJ
 #   AND is detected there. Survival and GOJ detection can't be separated with
 #   these data, so phi is their product, not survival alone.
+#   S includes spillway and turbine passage; it does not mean spillbay 1 only.
+#
+# The probabilities are the GLM building blocks from 03. Here we omit
+# covariates, so each component is an intercept-only probability model.
+# Multiply along routes, condition on detection, and fit the history counts
+# together. In 06, linear predictors and group effects replace those intercepts.
 #
 # The route is the hidden state; detections are what we see (BPA Chapter 9).
 # Six detectable cells plus one never-detected leaf:
@@ -76,9 +82,10 @@ set.seed(4)
 n.tagged <- 6000     # Tagged fish reaching Lower Granite (includes never-detected)
 psi <- 0.10          # Guidance efficiency, the target
 trans <- 0.60        # Share of guided fish that are barged
-phi_S <- 0.50        # Survive to GOJ and be detected there, after spill or turbine passage
-delta <- 0.40        # Bypassed fish are less likely to be seen at GOJ, on the logit scale
-phi_B <- plogis(qlogis(phi_S) - delta)
+recovery <- dam_recovery_defaults()
+phi_S <- unname(recovery["phi_S"])  # about 3.25%, nonguided GOJ recovery
+phi_B <- unname(recovery["phi_B"])  # about 9.86%, bypassed and returned to river
+delta <- qlogis(phi_S) - qlogis(phi_B)  # signed route contrast, not a forced penalty
 p <- 0.40            # GRS detection of nonguided fish
 
 is.guided <- rbinom(n.tagged, 1, psi)
@@ -178,7 +185,7 @@ stopifnot(slide.guided == 511, slide.grs == 3785,
 
 # 4. JAGS model ----
 # Model in words: five probabilities (psi, p, trans, phi_S, and the bypass
-# penalty delta) multiply along the branches of the detection tree to give
+# contrast delta) multiply along the branches of the detection tree to give
 # each cell's chance. Never-detected fish can't be counted, so each cell's
 # chance is divided by the chance of being detected at all. Then each
 # detected fish is one roll of a six-sided die with those chances.
@@ -220,7 +227,8 @@ N_total <- N_seen / p_seen
 
 jags.data <- list(n = as.vector(n), N_seen = N_seen)
 inits <- function() list(psi = runif(1, 0.05, 0.5), p = runif(1, 0.2, 0.8),
-                         trans = runif(1, 0.2, 0.8), phi_S = runif(1, 0.2, 0.8), delta = rnorm(1, 0, 0.5))
+                         trans = runif(1, 0.2, 0.8), phi_S = runif(1, 0.01, 0.08),
+                         delta = rnorm(1, -1.2, 0.5))
 params <- c("psi", "p", "trans", "phi_S", "phi_B", "delta", "N_total")
 
 # Fitting: this can take a few minutes.

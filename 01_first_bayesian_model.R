@@ -17,6 +17,7 @@
 # Teaching example; the numbers are made up.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(1)
@@ -125,13 +126,20 @@ print(fit)
 # - mean, sd: the posterior mean and standard deviation of the draws
 # - 2.5%, 97.5%: the 95% credible interval from the draws
 # - Rhat: compares the spread between chains to the spread within chains.
-#   Near 1 means the chains agree. Above about 1.1 means run longer or fix
-#   the model (BPA 2.6). Scripts 04 to 09 add a stricter check from helpers.R.
+#   jagsUI prints the traditional diagnostic. Below we also check modern
+#   rank-normalized split Rhat <= 1.01: agreement across and within chains.
 # - n.eff: how many independent draws the correlated draws are worth
 # - deviance: a measure of fit that jagsUI adds; ignore it for now
 # jagsUI also prints overlap0, f, and DIC with its own short explanations.
 # They're useful later for regression slopes and model comparison; you can
 # skip them here.
+
+print(fit_diagnostics(fit))
+if (!fit_ok(fit)) warning("fit: diagnostics need attention before interpreting results.")
+cat("Max rank-normalized split Rhat:", round(fit_rhat(fit), 3), "\n")
+# Bulk/tail effective sample sizes count the independent draws our correlated
+# chains are worth for the center and tails. We screen for at least 400 each.
+# Rhat and ESS are screens, not proof: inspect traces and Monte Carlo error too.
 
 traceplot(fit, parameters = "p")
 # A trace plot shows each chain's draws in order. Good chains look like
@@ -198,8 +206,9 @@ cat("Expanded passage (efficiency uncertainty only), median:", round(median(N.dr
 #   informative prior adds information and matters most when data are thin.
 # - JAGS doesn't solve the equations; it draws samples from the posterior.
 #   Summaries of the draws (mean, quantiles) are the estimates.
-# - Check convergence every time: Rhat near 1 and grassy, overlapping trace
-#   plots. More chains that agree is the evidence.
+# - Check convergence every time: rank-normalized split Rhat <= 1.01,
+#   bulk/tail ESS >= 400, and overlapping trace plots without drift.
+#   These are initial screens, not proof of convergence.
 # - A 95% credible interval is a probability statement about the parameter,
 #   given the model and data.
 # - Anything computed from a parameter (like C / p) gets its own distribution:

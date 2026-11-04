@@ -13,9 +13,17 @@
 #
 # This version pretends we see every fish's route. Real data don't allow
 # that, which is why the later scripts need the multistate cells.
+#
+# Build complex models from familiar GLMs. Many Bayesian ecological models
+# link several regressions through shared parameters and latent processes.
+# In 05--07, guidance, detection, and recovery determine the probabilities of
+# detection histories. Those histories supply a joint multinomial likelihood.
+# The familiar linear predictors and logit links remain; the outcome of every
+# component is no longer observed separately. Not every Bayesian model is a GLM.
 # All data are simulated. Requires JAGS and the jagsUI package.
 
 library(jagsUI)
+source("helpers.R")
 library(ggplot2)
 
 set.seed(2)
@@ -63,7 +71,9 @@ print(fit)
 # Trace plots: each chain's draws in order. Look for grassy, overlapping fuzz.
 traceplot(fit, parameters = c("b0", "b1"))
 
-cat("Max Rhat:", round(max(unlist(fit$Rhat), na.rm = TRUE), 3), "\n")
+print(fit_diagnostics(fit))
+if (!fit_ok(fit)) warning("fit: diagnostics need attention before interpreting results.")
+cat("Max rank-normalized split Rhat:", round(fit_rhat(fit), 3), "\n")
 cat("b0: truth", b0, " estimate", round(fit$mean$b0, 2),
     " 95% CrI", round(quantile(fit$sims.list$b0, c(0.025, 0.975)), 2), "\n")
 cat("b1: truth", b1, " estimate", round(fit$mean$b1, 2),
@@ -105,6 +115,8 @@ print(p1)
 #   probability stays between 0 and 1.
 # - The model is linear on the logit scale and curved on the probability
 #   scale. Adding 1 on the logit scale multiplies the odds by about 2.7.
+# - Later lessons connect several probability models through detection
+#   histories. Familiar GLMs are building blocks for those larger models.
 # - Simulating from known values and fitting shows whether the model can get
 #   the answer back. Every script in this repo uses that pattern.
 

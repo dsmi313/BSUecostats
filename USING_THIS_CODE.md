@@ -10,6 +10,11 @@ The scripts are built around fish passing a dam, but the models are general. If 
 
 **03 Logit GLM.** Any yes/no outcome with covariates: survival to a site, presence at a plot, nest success, a fish taking one route or another. The pattern (Bernoulli trial, logit link, linear predictor) is the building block for everything after it.
 
+Many Bayesian ecological models link familiar GLMs through shared parameters
+and latent processes. In 05--07, guidance, detection, and recovery components
+determine the detection-history probabilities and share one multinomial
+likelihood. We do not observe all component outcomes and fit separate GLMs.
+
 **04 State-space model.** Repeated counts over time where detection is below 1: daily trap catches, weekly redd counts, annual surveys. Two lessons carry over:
 
 - Counts alone estimate an index (N × p), not N. To get N you need separate data on detection, such as efficiency trials, double observers, or marked animals.
@@ -44,6 +49,17 @@ The scripts are built around fish passing a dam, but the models are general. If 
 - **River flow and spill:** Fish Passage Center historical flow and spill query, https://www.fpc.org/smolt/smolt_queries/Q_river_historicflowspill_dataquery.php. Covariates like the spill effect in `03` and `06`.
 
 ## Gotchas that bite real studies
+
+- **Unrealistically easy recovery.** GOJ recovery combines survival and downstream
+  detection. The dam simulations now use low recovery throughout: about 3.25%
+  nonguided and 9.86% bypassed-returned in 05--07; 1--6% and 4--15% in every
+  replicate of 09. Sparse overlaps can weaken identification even when the
+  total number of tags looks large. These truth settings are not fitted prior
+  bounds. Lesson 07a already uses low nonguided recovery.
+- **A slope direction imposed by the prior.** Lesson 06's `restrict.spill <- TRUE`
+  excludes positive spill slopes. It is a modeling assumption. Compare
+  `FALSE` using the same data, and inspect whether other model terms absorb a
+  misspecified direction.
 
 - **Marked animals that aren't a fair sample.** Animals tagged after the outcome you're estimating (fish tagged inside the bypass, after they were already guided) make the rate look far better than it is, with a tight interval that misses the truth. Check where and when every tag was applied, and drop tags whose release site guarantees a route (`05`, section 7).
 - **Incomplete transport flags.** Check transport records and distinguish passage time from loading time. Missing flags leave GE unchanged but drag bypass recovery down, because barged fish look like bypassed fish that never reached GOJ (`05`, section 9).

@@ -32,6 +32,10 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 
 **PTAGIS.** The public database of PIT tag detections in the Columbia River basin: https://www.ptagis.org/
 
+**Recovery (phi).** The chance a fish survives to Little Goose and is detected
+there. The dam examples estimate their product, not survival alone. For bypassed
+fish, recovery is conditional on return to river and excludes transported fish.
+
 **RSW (removable spillway weir).** A structure providing surface passage through a spillbay. At Lower Granite, it directs surface-oriented passage toward spillbay 1.
 
 **Sample rate.** Here, the fraction of time the trap sampling gates are open. Expanding by this rate assumes sampled periods represent passage during unsampled periods.
@@ -75,6 +79,11 @@ Young salmon and steelhead (smolts) swim down the Snake River to the ocean in sp
 **Coverage.** Over many simulated data sets, the share of 95% intervals that contain the truth. It measures calibration under the simulated conditions. Nominal 95% Bayesian intervals do not guarantee 95% coverage at every fixed parameter value.
 
 **Credible interval.** A Bayesian interval: given the model and the data, the parameter is inside it with the stated probability. See also Posterior and Coverage.
+
+**GLM (generalized linear model).** A regression with an outcome distribution,
+a linear predictor, and a link function. Familiar GLMs can be components of
+larger Bayesian models, connected through shared parameters and latent processes.
+The detection-history likelihood here connects guidance, detection, and recovery.
 
 **Hierarchical model.** A model where group-level values (each week's GE, say) are themselves drawn from a distribution with its own parameters.
 
