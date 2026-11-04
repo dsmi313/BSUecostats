@@ -48,6 +48,22 @@ The original 60,000-iteration runs warn about insufficient bulk ESS in both mode
 
 With the script's 60,000 iterations, the model using trials fails diagnostics on 69 quantities (lowest tail ESS 91), so its numbers can't be trusted. The longer check uses `ni <- 480000; nb <- 240000; nt <- 30; nc <- 3`; both fits then pass (largest Rhat 1.002; smallest bulk and tail ESS 1,323 and 1,356). Efficiency gets less precise: its average daily 95% interval width is 0.18, versus 0.13 with 30 marked fish. Passage follows: the season total is 5,943 (95% CrI 4,764–7,450) against truth 6,284, an interval about 37% wider than the default 5,190–7,145. The counts-only model doesn't change (1,235; 1,150–1,332), because it never uses the trials and still estimates N × p, not N. Fewer marked fish cost precision, and the sampler needs far longer chains to explore the less constrained daily efficiency.
 
+## 04a CJS Survival
+
+In the default run, survival is 0.652 (95% CrI 0.577–0.731) against truth 0.65, and recapture 0.426 (0.335–0.519) against 0.4. The last survival's interval is 0.14–0.96, nearly the flat prior's. The fit check gives p = 0.486 for the time-varying model and 0.005 for the constant model.
+
+### 1. Ten marked per occasion
+
+The intervals roughly double in width: survival 0.532–0.813 and recapture 0.354–0.723.
+
+### 2. Constant recapture probability
+
+The last survival is now identified, at 0.18–0.56, but that interval misses the truth, 0.7. It assumes p is the same every year, and here it isn't. The fit check flags the constrained model (p = 0.012). A constraint buys identifiability only if it's true.
+
+### 3. Seed 7
+
+The check no longer catches the constant model (p = 0.384). With 30 animals marked per year, the check has little power. A passing check means this check couldn't detect misfit, not that the model is right. With seed 7, section 1's recapture interval (0.415–0.607) also misses its truth, 0.4, as about 1 in 20 intervals should.
+
 ## 05 Six-Cell Multistate Model
 
 Default GOJ recovery is 3.25% for nonguided fish and 9.86% for bypassed fish returned to river. These combine survival and downstream detection. In the verified default fit, GE is 0.094 (95% CrI 0.078–0.111), against truth 0.100. Longer default chains now allow all four fits, including the facility-tag and no-GOJ examples, to pass the diagnostic screen.
