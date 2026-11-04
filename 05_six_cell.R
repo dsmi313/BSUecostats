@@ -337,8 +337,8 @@ cat("  Fish tagged upstream only:      ", round(fit$mean$psi, 3), " 95% CrI", ci
 cat("  Plus fish tagged in the facility:", round(fit.mixed$mean$psi, 3), " 95% CrI", ci(fit.mixed$sims.list$psi), "\n")
 cat("Fix: drop fish whose tagging site guarantees a route before fitting.\n")
 
-# Stop here: the mixed fit passed its diagnostics. What told you its GE was
-# wrong? On real data there is no truth line. What would tell you?
+# Stop here: even if the mixed fit passes its diagnostics, what tells you
+# its GE is wrong? On real data there is no truth line. What would tell you?
 
 # 8. Identifiability: no downstream site ----
 # Remove GOJ. Every detected fish is now either guided (GRJ, including barged)
