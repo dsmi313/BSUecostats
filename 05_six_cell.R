@@ -143,6 +143,9 @@ cell.prob <- c(c1 = psi * (1 - trans) * (1 - phi_B),
                never = (1 - psi) * (1 - p) * (1 - phi_S))
 stopifnot(abs(sum(cell.prob) - 1) < 1e-12)
 
+# Stop here: which cells hold fish that skipped the bypass, and which of
+# those were detected at GOJ? Find them in the printed counts.
+
 # 3. Back-of-envelope estimates ----
 # c4 and c5 both skipped the bypass and both were detected at GOJ. They differ
 # only in whether GRS read them, so phi_S (survival and GOJ detection) cancels
@@ -153,6 +156,9 @@ guided <- n["c1"] + n["c2"] + n["c6"]
 nonguided.read <- n["c3"] + n["c4"]
 ge.hat <- guided / (guided + nonguided.read / p.hat)
 cat("Closed form: p-hat =", round(p.hat, 3), " GE =", round(ge.hat, 3), "\n")
+
+# Stop here: explain why c5 informs detection. Hint: c4 and c5 differ only in
+# whether GRS read the fish.
 
 # 3b. The talk's MY2025 wild counts: GE before the multinomial ----
 # These are the season counts shown in the talk, not the simulated fish above.
@@ -182,6 +188,33 @@ stopifnot(slide.guided == 511, slide.grs == 3785,
 # The overlap calculation assumes GRS-read and GRS-missed nonguided fish
 # have the same downstream recovery probability. These are season-level
 # closed-form calculations, not the hierarchical day/night model estimates.
+
+# Stop here: the row correction barely moved GE, but GOJ cut it by more than
+# half. Why? Hint: the rows measure misses only among fish that cross bay 1.
+
+# 3c. Assumptions to check before using this on real data ----
+# The six-cell model is a demonstration until these hold for your data.
+# 1. Every guided fish is detected at GRJ.
+#    A guided fish GRJ misses either drops out of the data or, if seen at GOJ,
+#    lands in c5 and looks like a nonguided fish GRS missed. Either way
+#    guided fish are undercounted, and GE is biased low.
+#    Evidence: GRJ read efficiency, estimated from fish one coil read and
+#    another missed, as the row method does at GRS; tagged fish handled in
+#    the facility sample that have no GRJ record.
+# 2. Tagged fish are a fair sample of fish arriving at the dam.
+#    Fish tagged after the guidance decision (section 7), or tagged fish that
+#    pass differently from untagged ones, bias GE.
+#    Evidence: GE by tagging site, tag date, and fish size; how many histories
+#    start at the LGR facility; whether GE changes when facility tags are
+#    dropped (5.0% vs 20.1% in the talk).
+# 3. GRS-read and GRS-missed nonguided fish reach GOJ and are detected there
+#    at the same rate.
+#    Missed fish include fish that passed other spillbays or the turbines. If
+#    they survive to Little Goose or are detected there less often, c5 is too
+#    small, p too high, and GE too high.
+#    Evidence: route-specific survival to Little Goose from acoustic
+#    telemetry; whether read and missed fish arrive at Little Goose at times
+#    when GOJ detection differs.
 
 # 4. JAGS model ----
 # Model in words: five probabilities (psi, p, trans, phi_S, and the bypass
@@ -247,6 +280,9 @@ print(round(cbind(truth, estimate = est, lower = lo, upper = hi), 3))
 cat("Expanded tagged passage (detection-probability uncertainty only): truth", n.tagged, " estimate", round(fit$mean$N_total),
     " 95% expansion interval", round(quantile(fit$sims.list$N_total, c(0.025, 0.975))), "\n")
 
+# Stop here: did each 95% interval contain the truth? Which parameter has the
+# widest interval relative to its true value?
+
 # 5b. The talk's MY2025 counts in JAGS ----
 # Same model, real data: the six season counts from section 3b. The posterior
 # mean of psi should sit near the closed-form 0.05, now with an interval.
@@ -300,6 +336,9 @@ cat("\nGE truth:", psi, "\n")
 cat("  Fish tagged upstream only:      ", round(fit$mean$psi, 3), " 95% CrI", ci(fit$sims.list$psi), "\n")
 cat("  Plus fish tagged in the facility:", round(fit.mixed$mean$psi, 3), " 95% CrI", ci(fit.mixed$sims.list$psi), "\n")
 cat("Fix: drop fish whose tagging site guarantees a route before fitting.\n")
+
+# Stop here: the mixed fit passed its diagnostics. What told you its GE was
+# wrong? On real data there is no truth line. What would tell you?
 
 # 8. Identifiability: no downstream site ----
 # Remove GOJ. Every detected fish is now either guided (GRJ, including barged)
@@ -361,6 +400,9 @@ p3 <- ggplot(data.frame(p = fit.nogoj$sims.list$p, psi = fit.nogoj$sims.list$psi
   labs(title = "Without GOJ: psi and p trade off", x = "GRS detection p", y = "Guidance efficiency psi") +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p3)
+
+# Stop here: without GOJ, what combination of GE and p do the counts still
+# pin down? Compare each posterior with its prior.
 
 # 9. Incomplete transport flags: why the transport cell is there ----
 # Suppose a barged fish retains its GRJ record but loses its transport flag.

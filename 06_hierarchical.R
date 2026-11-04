@@ -303,6 +303,9 @@ cat("Wild weekly GE, mean 95% CrI width:   separate", round(mean(w1$hi - w1$lo),
     "  hierarchical", round(mean(w2$hi - w2$lo), 3), "\n")
 cat("Spill slope beta: truth", beta, " estimate", round(fit2$mean$beta, 2), "\n")
 
+# Stop here: before plotting, predict which weeks the hierarchical fit will
+# pull furthest from the week-alone fit, and in which direction.
+
 # 5. Plot the one season ----
 wk.df <- rbind(data.frame(week = 1:S, model = "Each week on its own", w1),
                data.frame(week = 1:S, model = "Hierarchical", w2))
@@ -318,6 +321,9 @@ p1 <- ggplot(wk.df, aes(factor(week), mean, color = model)) +
        x = "Week", y = "Wild guidance efficiency") +
   theme_bw(base_size = 13) + theme(legend.position = "top")
 print(p1)
+
+# Stop here: which weeks moved most? How many wild fish did those weeks have?
+# The hierarchical error was lower. What did the model assume to earn that?
 
 # 6. Repeat the season ----
 # Only runs if run.repeats is TRUE (set near the top of the script). It's
@@ -468,6 +474,9 @@ p.ppc <- ggplot(ppc.df, aes(obs, new)) +
        x = "Discrepancy, observed counts", y = "Discrepancy, simulated counts") +
   theme_bw(base_size = 13)
 print(p.ppc)
+
+# Stop here: the rising-detection data fail the check. Which assumption
+# shared across all 32 rear-weeks did they break?
 
 # Try this ----
 # Predict before rerunning; reset each change before trying the next.

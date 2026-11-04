@@ -8,7 +8,18 @@ Most scripts simulate data from known values, fit a model, and check the answer 
 >
 > - **New to Bayesian models?** Run [01](01_first_bayesian_model.R), [02](02_lincoln_petersen.R), then [05](05_six_cell.R).
 > - **Here for the talk's main results?** Run [05](05_six_cell.R), [06](06_hierarchical.R), then [07a](07a_day_night_closed_form.R).
+> - **Have 20 minutes?** Take the [guided route](#a-20-minute-route) below.
 > - **Want the standard capture-recapture models?** Run [02a](02a_closed_population.R) (population size), [04a](04a_cjs_survival.R) (survival), and [04b](04b_jolly_seber.R) (both), taken from Kéry and Schaub.
+
+## A 20-minute route
+
+After setup, run [05_six_cell.R](05_six_cell.R) top to bottom once (under a minute), then read these sections in order. Each stop has one thing to notice and one question to answer before moving on.
+
+1. **05, sections 0 and 3b** (4 min). Notice GE fall from 0.12 to 0.11 to 0.05 as the row correction and then GOJ are added. *Why does GOJ cut GE by more than half when the row correction barely moves it?*
+2. **05, sections 3 and 3c** (5 min). Notice that c4 and c5 differ only in whether GRS read the fish. *Explain why c5 informs detection, and which assumption in 3c that depends on.*
+3. **05, section 5** (3 min). Notice the JAGS estimate of GE, 0.094 (0.078–0.111), against truth 0.10. *Which parameter has the widest interval relative to its true value?*
+4. **05, section 8** (3 min). Notice the plot: without GOJ, GE and detection trade off. *What data would separate them?*
+5. **[07a_day_night_closed_form.R](07a_day_night_closed_form.R), sections 0 and 4** (5 min). Run it (about 5 seconds). Notice GE of 1% by day and 26% at night, then the +33% error from borrowing hatchery's pooled GE against +1% when split. *Why does borrowing pooled GE overestimate wild abundance when both rears share day and night GE?*
 
 ## Setup
 

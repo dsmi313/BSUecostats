@@ -78,6 +78,9 @@ set.seed(6)
 
 run.repeats <- FALSE   # TRUE adds section 5, the 100-week repeat (several minutes)
 
+# Stop here: day and night GE both fell from week A to week B. Why did pooled
+# GE rise?
+
 # 1. True values ----
 
 psi_day <- 0.02
@@ -245,6 +248,9 @@ abund.error <- function(fit) 100 * (median(1 / fit$sims.list$wild_ge) * ge.true[
 labs3 <- c("Wild alone", "Borrow pooled", "Borrow split")
 cols3 <- c("Wild alone" = "gray40", "Borrow pooled" = "darkorange", "Borrow split" = "steelblue")
 
+# Stop here: the three models differ only in where wild GE comes from. Name
+# the source for each before fitting them.
+
 # 3. One week ----
 
 wk <- simulate.week()
@@ -290,6 +296,9 @@ one.week <- rbind(
 cat("Abundance errors use the posterior median of inverse GE, not its mean.\n")
 cat("True wild GE:", round(ge.true["wild"], 3), "\n")
 print(round(one.week, 3))
+
+# Stop here: which estimate landed closest to the truth? Why did borrowing
+# hatchery's pooled GE miss, when both rears share day and night GE?
 
 # 4. Plot the one week ----
 week.df <- data.frame(method = factor(labs3, levels = rev(labs3)), as.data.frame(one.week[, 1:3]))
@@ -429,6 +438,9 @@ prior.table <- do.call(rbind, lapply(seq_len(nrow(prior.runs)), function(i) {
 }))
 cat("True wild GE:", round(ge.true["wild"], 3), "\n")
 print(prior.table)
+
+# Stop here: did the prior move the 20-fish estimate more than the 80-fish
+# one? What does that say about wild-alone GE in thin weeks?
 
 # Try this ----
 # Predict before rerunning; reset each change before trying the next.
