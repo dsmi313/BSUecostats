@@ -1,6 +1,6 @@
 # How Many Fish Are There? Mark-Recapture with JAGS
 
-Companion code for the BSU ecological statistics group talk on IDFG mark-recapture, from screw traps to Lower Granite Dam. **[View the slides](https://docs.google.com/presentation/d/1oUBGKKDx5jiRbfvwGtDFsreYjDw0KO_JpvS4nJRO8xY/edit?slide=id.p19#slide=id.p19)**
+Companion code for the BSU ecological statistics group talk on IDFG mark-recapture, from screw traps to Lower Granite Dam. **[View the slides](https://docs.google.com/presentation/d/1f0dWv8g_EwbsDDwEKLQE8IRd6JRxob2HT59992U6Y-Y/edit?slide=id.p1#slide=id.p1)**
 
 Most scripts simulate data from known values, fit a model, and check the answer against the truth. **These are teaching examples, not the models IDFG uses for its estimates.** Written with help from Claude.
 
