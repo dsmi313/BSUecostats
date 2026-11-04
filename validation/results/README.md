@@ -1,6 +1,6 @@
 # Validation results: 4 November 2026
 
-Executed 43 cases: all 11 default scripts (00–09, including 07a), every Try This exercise, both optional repeated studies, and three completed longer-chain exercise checks. A fourth longer check, `04_small_long`, is still running at handoff and is not included as a completed result. See `../../CLAUDE_HANDOFF.md`. All completed without execution errors. The four focused tests also passed. R 4.3.3, JAGS 4.3.2, jagsUI 1.6.3, rjags 4-18, ggplot2 3.4.4, and posterior 1.5.0 were used; see `session.txt`.
+Executed 45 cases: all 11 default scripts (00–09, including 07a), every Try This exercise, both optional repeated studies, and five longer-chain checks. All completed without execution errors. The four focused tests also passed. R 4.3.3, JAGS 4.3.2, jagsUI 1.6.3, rjags 4-18, ggplot2 3.4.4, and posterior 1.5.0 were used; see `session.txt`. The two longer checks run afterward, `04_small_long` and `06_repeats_long`, used rjags 4.17 and posterior 1.7.0 with the same R, JAGS, jagsUI, and lesson code; `06_repeats_long` reproduces the original 06 run's default season and all 20 repeated seasons exactly.
 
 All 20 directly fitted default examples passed the diagnostic screen. Lesson 09 separately retained 48 of 50 simulated fits, with two failures reported. Completion and sampling adequacy are different outcomes.
 
@@ -17,8 +17,8 @@ All 20 directly fitted default examples passed the diagnostic screen. Lesson 09 
 | Original case | Fits failing the diagnostic screen | Longer check |
 | --- | ---: | --- |
 | `04_outage` | 2 | `04_outage_long`: 0 failures |
-| `04_small` | 1 | `04_small_long` still running at handoff; original warning retained. |
-| `06_repeats` (later predictive check) | 1 | Not resolved in this optional run; its 20 paired study fits all passed. Default predictive check passed separately. |
+| `04_small` | 1 | `04_small_long` (480,000 iterations): 0 failures |
+| `06_repeats` (later predictive check) | 1 | `06_repeats_long` (predictive-check fits at 40,000 iterations): 0 failures; same 20 seasons |
 | `06_variable` | 1 | `06_variable_long`: 0 failures |
 | `07_small` | 1 | `07_small_long`: 0 failures |
 
@@ -37,8 +37,7 @@ Coverage and errors in `recovery_summary.csv` describe passed fits. They do not 
 ## Files
 
 - `run_status.csv`: execution status, warnings, direct-fit failure counts, and MD5 hashes of executed lesson/helper files. Exercise variants have different source hashes by design; the recorded 06 reruns that changed only plotting also have different hashes.
-- `fit_diagnostics.csv`: rank-normalized split Rhat, bulk/tail ESS, and median MCSE for direct fits, including inverse GE where relevant.
-- `posterior_summary.csv`: direct-fit posterior summaries, with a pass flag. Includes original flagged fits for transparency.
+- `fit_diagnostics.csv` and `posterior_summary.csv` (not committed; too large): parameter-level diagnostics and posterior summaries for every direct fit, including flagged fits. `summarize_runs.R` writes them when you rerun the checks.
 - `repeat_status.csv`: per-replicate diagnostic decisions for optional studies. The 06 individual pass flags are unavailable; its paired flag is retained.
 - `recovery_summary.csv`: conditional bias, mean absolute error, interval width, coverage, and retained counts for 09.
 - `failed_recovery_diagnostics.csv`: parameter-level reasons for final 09 failures after retries.
