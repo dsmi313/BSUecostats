@@ -10,6 +10,9 @@
 #
 # This uses the six-cell model from 05_six_cell.R. Each repeat draws its own
 # true parameters, so the check isn't tuned to one lucky setting.
+# The entire study uses low GOJ recovery: nonguided 1--6%, bypassed 4--15%.
+# These are survival times downstream detection, not survival alone.
+# Low overlap counts are part of the problem, not removed in data generation.
 #
 # Use this as a template, not just an exercise. Any time you change a model
 # (new species, new sites, new covariates), check it here before trusting it
@@ -27,6 +30,16 @@ source("helpers.R")
 library(ggplot2)
 
 set.seed(7)
+
+# Low recovery is the default for every simulated data set, not an optional
+# stress test. Draw both route probabilities directly, then derive the signed
+# logit contrast used by the fitted model. This permits bypass recovery to be
+# higher than nonguided recovery, as in the talk's MY2025 example.
+draw_low_recovery_truth <- function() {
+  phi_S <- runif(1, 0.01, 0.06)
+  phi_B <- runif(1, 0.04, 0.15)
+  c(phi_S = phi_S, phi_B = phi_B, delta = qlogis(phi_S) - qlogis(phi_B))
+}
 
 # 1. The model (same as 05_six_cell.R) ----
 
@@ -61,16 +74,17 @@ pars <- c("psi", "p", "trans", "phi_S", "phi_B")
 results <- data.frame()
 rhat.all <- numeric()
 passed <- logical(n.reps)
+overlap.counts <- matrix(0L, n.reps, 3, dimnames = list(NULL, c("c2", "c4", "c5")))
 
 for (i in 1:n.reps) {
   truth <- c(psi = runif(1, 0.03, 0.30), p = runif(1, 0.25, 0.60), trans = runif(1, 0.3, 0.8),
-             phi_S = runif(1, 0.3, 0.7), delta = runif(1, 0, 0.8))
-  truth["phi_B"] <- plogis(qlogis(truth["phi_S"]) - truth["delta"])
+             draw_low_recovery_truth())
   pr <- with(as.list(truth), c(psi * (1 - trans) * (1 - phi_B), psi * (1 - trans) * phi_B,
                                 (1 - psi) * p * (1 - phi_S), (1 - psi) * p * phi_S,
                                 (1 - psi) * (1 - p) * phi_S, psi * trans,
                                 (1 - psi) * (1 - p) * (1 - phi_S)))
   n <- rmultinom(1, n.tagged, pr)[1:6, 1]
+  overlap.counts[i, ] <- n[c(2, 4, 5)]
   # Fitting: this can take a few minutes.
   fit <- safe_jags(list(n = n, N_seen = sum(n)), NULL, c(pars, "delta"), "six_cell.jags",
               n.chains = 3, n.iter = 4000, n.burnin = 1000, n.thin = 3, parallel = FALSE, verbose = FALSE)
@@ -97,9 +111,11 @@ cat("\n")
 
 # 3. Summarize ----
 n.kept <- sum(passed)
-if (!n.kept) stop("No fits passed diagnostics; inspect fit failures before summarizing.")
+cat("Data sets with zero counts in downstream cells (all simulated data sets):\n")
+print(colSums(overlap.counts == 0))
 cat("Fits failing diagnostics after a retry:", n.reps - n.kept, "of", n.reps,
     "(results below are among the", n.kept, "fits that passed)\n")
+if (!n.kept) stop("No fits passed diagnostics; inspect fit failures before summarizing.")
 results$covered <- results$lo <= results$truth & results$truth <= results$hi
 results$error <- results$est - results$truth
 summary.table <- do.call(rbind, lapply(split(results, results$par), function(d)
@@ -138,8 +154,8 @@ print(p1)
 #   95% of the time?).
 # - With a modest number of repeats, coverage bounces a few points around 95%
 #   from chance alone.
-# - A parameter that rests on small cells leans toward its prior: here phi_B
-#   runs a little high when it's truly low.
+# - Low recovery makes overlap cells sparse. Examine which parameters become
+#   prior-sensitive; no particular bias direction or coverage is guaranteed.
 
 # Where BPA teaches this ----
 # - 1.5 in the book: "Truth is known, so we know what to expect from the

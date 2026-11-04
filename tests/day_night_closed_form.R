@@ -5,8 +5,8 @@ source("07a_day_night_closed_form.R")
 options(BSUecostats.functions_only = NULL)
 
 # A deterministic table with known passage: day N=1000, night N=500,
-# GE=.10/.40, detection=.50, and GOJ recovery=.20.
-e <- estimate_borrow_rear(100, 200, 450, 150, 120, 120)
+# GE=.10/.40, detection=.50, and GOJ recovery=.03.
+e <- estimate_borrow_rear(100, 200, 450, 150, 18, 18)
 stopifnot(e$ok, abs(e$ge.d - .1) < 1e-12, abs(e$ge.n - .4) < 1e-12,
           abs(e$a - 1 / 3) < 1e-12, abs(e$pool - .2) < 1e-12)
 

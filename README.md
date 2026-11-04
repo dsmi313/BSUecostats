@@ -10,7 +10,15 @@ Most scripts simulate data from known values, fit a model, and check the answer 
 
 New to Bayesian statistics? Start with [01_first_bayesian_model.R](01_first_bayesian_model.R), and keep [GLOSSARY.md](GLOSSARY.md) open: it explains the fish terms (GE, GRJ, PIT tag, spill) and the statistics terms (prior, posterior, Rhat, logit) in plain language.
 
-**These are teaching examples, not the models IDFG uses for its estimates.** They are simplified so each idea stands on its own. The concepts carry over to the production models. Written with help from Claude. I've tested every script and checked every reference.
+**These are teaching examples, not the models IDFG uses for its estimates.** They are simplified so each idea stands on its own. The concepts carry over to the production models. Written with help from Claude.
+
+**Validation status:** the dam lessons have been revised to use low downstream
+recovery throughout. Focused checks cover syntax, diagnostics, arithmetic, and
+simulation inputs. Full lesson fits and optional repeated studies need to be
+rerun after this revision; the revised JAGS results are not yet validated.
+`ANSWERS.md` removes numerical claims that depended on the old high-recovery
+scenario. The separate `07a` slide simulation already uses low recovery and
+retains its previously checked figure and summaries.
 
 ## Requirements
 
@@ -39,6 +47,46 @@ The numbered R scripts and `helpers.R` stay together so they can be run directly
 
 Simulation fits that error or fail diagnostics are retried once and counted if they still fail. Comparisons remain paired. Lesson 07 compares posterior-median abundance expansions because the wild-only inverse-GE mean can be infinite when no guided fish are observed.
 
+Lessons 01 and 03 use the same modern diagnostic helper as the later JAGS
+lessons. Traditional jagsUI Rhat is supplemented by rank-normalized split
+Rhat and bulk/tail effective sample sizes.
+
+## Building from familiar GLMs
+
+Many Bayesian ecological models connect familiar regressions through shared
+parameters and latent processes. Lesson 03 starts with a directly observed
+Bernoulli outcome and a logit link. Lesson 05 links intercept-only guidance,
+detection, and recovery components through the detection-history likelihood.
+Lessons 06 and 07 add covariate, group, and day/night effects. Their component
+outcomes are not all observed separately; the histories connect the processes
+in one model. This is a useful starting point, not a description of every
+Bayesian model.
+
+## Low downstream recovery throughout the dam examples
+
+Recovery here means survival to Little Goose **and detection there**. It is
+not survival alone. Lessons 05--07 use the talk's MY2025 wild ratios through
+`dam_recovery_defaults()` in `helpers.R`:
+
+| Route at Lower Granite | GOJ recovery used to simulate data |
+|---|---:|
+| Nonguided (spillway or turbine passage) | 123 / 3,785 = 3.25% |
+| Bypassed and returned to river (transport excluded) | 35 / 355 = 9.86% |
+
+Lesson 09 draws nonguided recovery from 1--6% and bypass recovery from 4--15%
+in **every** replicate. These are chosen simulation ranges, not uncertainty
+intervals from observed data. Lesson 07a already uses 3.25% nonguided recovery.
+The data-generating values are low; fitted recovery priors stay broad and are
+not truncated to those simulation ranges. With low recovery, zero overlaps,
+prior influence, and diagnostic failures are part of the problem to inspect.
+Screw-trap efficiency, guidance, and antenna read probability are different
+quantities and retain their own simulation settings.
+
+Lesson 06 defaults to an explicitly nonpositive spill-slope prior. Set
+`restrict.spill <- FALSE` to allow either direction and compare the same data.
+Its new exercise also tests what happens when the true slope is positive but
+the fitted prior excludes positive values.
+
 ## Levels
 
 - **Start here, no Bayesian background needed:** `01`, `02`, `03`. The basics: prior, likelihood, posterior, MCMC, and the logit.
@@ -61,7 +109,7 @@ Simulation fits that error or fail diagnostics are retried once and counted if t
 | [08_bootstrap.R](08_bootstrap.R) | The slide's one-day fixed-GE bootstrap, then weekly fixed GE versus GE draws. Coverage of each over 300 simulated weeks. Plain R, no JAGS. | Where Bootstrap Intervals Come From; Jensen's inequality |
 | [09_recover_truth.R](09_recover_truth.R) | A small simulation study: bias and 95% interval coverage over 50 simulated data sets. | Does it recover GE? |
 
-Every lesson script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Run times are a few seconds to a few minutes; `04`, `06`, `07`, and `09` are the slowest. In `06` and `07`, the single example and its plot run by default. The repeated simulations are off: set `run.repeats <- TRUE` at the top of either script to add them.
+Every lesson script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Plain-R examples are quick; JAGS fits and repeated studies can take minutes or longer. Low-recovery runtimes and diagnostics need rechecking, especially in `05`, `06`, `07`, and `09`. In `06` and `07`, single-example and model-check/prior-sensitivity sections run by default. Repeated simulation studies are off: set `run.repeats <- TRUE` at the top of either script to add them.
 
 ## Real data to try
 
@@ -98,6 +146,9 @@ After setup, run `Rscript tests/audit_checks.R` from the repository root. These 
 Run `Rscript tests/talk_examples.R` for the slide arithmetic and
 `Rscript tests/day_night_closed_form.R` for the closed-form day/night example.
 Both use base R only.
+
+`Rscript tests/low_recovery.R` checks recovery ranges and route contrasts without
+fitting JAGS models. These checks do not substitute for full lesson runs.
 
 ## Reproduce the day/night slide figure
 
@@ -159,6 +210,6 @@ Use slide titles because slide numbers change as the deck develops.
 
 The talk's regression includes outflow; `06` uses spill only. The talk's day/night model extends that regression; `07` uses one week without covariates. The talk carries genetic stock-assignment uncertainty; `08` leaves it out along with composition resampling.
 
-Each lesson (`01`–`09`) ends with two or three **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. Answers, with the numbers from an actual run of each, are in [ANSWERS.md](ANSWERS.md).
+Each lesson (`01`–`09`) ends with **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. [ANSWERS.md](ANSWERS.md) provides guidance and labels historical numerical examples. Numerical answers for the revised low-recovery JAGS lessons await fresh runs.
 
 Lesson `05`, section 3b, walks through the talk's MY2025 wild counts with plain division before introducing the multinomial: naive GE, a row-read correction, then the GOJ overlap correction. These season calculations are kept separate from the simulated JAGS data and from the production hierarchical estimates.

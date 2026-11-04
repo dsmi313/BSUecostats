@@ -1,6 +1,8 @@
 # Answers to the Try This Exercises
 
-Try each exercise before reading its answer. Every number below comes from one run of the script with that single change, using the script's own seed. JAGS results can differ slightly on another computer or package version, so expect the same pattern, not identical digits. Several exercises run one simulated week or season, so some differences are partly chance. Where that matters, the answer says so.
+Try each exercise before reading its answer. Lessons 05, 06, 07, and 09 now use low downstream recovery throughout. Their old numerical answers came from a different, high-recovery scenario and have been removed. The answers below describe what to investigate; new fitted values and coverage results await the full lesson runs.
+
+Numerical examples retained for 01--04 and 08 are historical runs of unchanged simulation settings, not newly verified outputs under the current diagnostic checks. Inspect diagnostics before interpreting any numerical comparison. JAGS results can vary by software version. Lesson 07a has its own previously checked closed-form outputs and no JAGS fits.
 
 ## 01 First Bayesian Model
 
@@ -48,41 +50,55 @@ Efficiency gets less precise (average 95% width 0.18 vs 0.13), and so does passa
 
 ## 05 Six-Cell Multistate Model
 
+Default GOJ recovery is about 3.25% for nonguided fish and 9.86% for bypassed fish returned to river. These probabilities combine survival and downstream detection. They are not survival estimates alone.
+
 ### 1. Five thousand fish tagged in the facility
 
-Estimated GE is 0.506 (95% CrI 0.493–0.519) against a truth of 0.10, compared with 0.277 with 1,500 facility fish. The interval is narrow and nowhere near the truth, so it gives no warning. More wrongly tagged fish make the model more confidently wrong.
+Adding fish selected because they already entered the bypass makes the sample disproportionately guided. Compare GE and its interval with and without those fish, then check whether either interval covers the simulated truth. A narrow interval need not reveal selection bias. Report numbers only after checking the revised fits.
 
 ### 2. A Beta(1, 9) prior on psi without GOJ
 
-p's posterior moves from a mean of 0.647 (0.161–0.983) to 0.532 (0.086–0.970), even though its own prior and the data are unchanged. Without GOJ the data pin down only a combination of psi and p, so a prior on one shifts the other along the ridge. psi's mean moves from 0.146 to 0.122. The without-GOJ fit's Rhat is 1.025, another hint that something is off.
+Without GOJ, the data identify a combination of GE and detection, not each probability separately. A prior change on GE can move the posterior for detection even when detection's own prior is unchanged. Inspect the joint ridge and diagnostics. Sampler agreement does not establish identifiability.
 
 ### 3. Six hundred tagged fish
 
-phi_B has the widest interval relative to its true value (0.245–0.608, width 0.9 times truth, vs 0.3 times with 6,000 fish). psi is next (0.55 times). The sparse histories are c1 (15 fish) and c2 (11 fish), the bypassed fish returned to the river, and they are what informs phi_B. Section 7 still adds 1,500 facility fish, now more than twice the tagged sample, so its GE jumps to 0.749.
+Low recovery makes c2, c4, and c5 especially sparse. Compare interval widths relative to truth and count these cells; which parameter is weakest depends on the realized sample. Section 7 still adds 1,500 facility fish, so the selection problem becomes large relative to the remaining upstream sample. Do not reuse the old high-recovery interval widths or GE estimates.
 
 ## 06 Hierarchical Model
 
 ### 1. Better-sampled wild weeks
 
-Not every week is thick: wild fish tagged now range from 15 to 1,255, with 12 of 16 weeks above 50. The hierarchical advantage shrinks: mean absolute error for wild GE is 0.033 on its own vs 0.026 hierarchical (0.057 vs 0.031 before), and mean interval width is 0.161 vs 0.116 (0.258 vs 0.173). In weeks above 50 fish the errors are 0.032 vs 0.023. The four remaining thin weeks still get much narrower intervals from the hierarchical model (0.30 vs 0.16).
+Increasing the wild sample usually reduces dependence on shared structure, but the amount of identifying information depends on downstream overlaps as well as total tags. Compare wild GE error, interval width, coverage, and diagnostic failures. Do not assume a narrow hierarchical interval is well calibrated.
 
 ### 2. More week-to-week variation
 
-The hierarchical model estimates sigma_psi at 1.08, so it shrinks weeks less toward their stratum. Its advantage shrinks: mean absolute error is 0.058 on its own vs 0.045 hierarchical, and interval width is 0.255 vs 0.227. Hierarchical coverage is 15 of 16 weeks in this one season. Borrowing helps less when weeks really are different.
+Larger departures from the shared pattern can make shrinkage more costly. Examine whether the model estimates greater variation and whether unusual wild weeks retain interval coverage. One season is not enough to establish comparative performance; optional repeats provide that check.
+
+### 3. Allowing either spill-slope direction
+
+`restrict.spill <- TRUE` imposes a nonpositive coefficient before the data are seen. With `FALSE`, the prior permits either direction; the likelihood and simulated data are unchanged. Compare the slope, wild GE, and diagnostics. In the extension with true `beta <- 0.4`, the restricted model cannot recover the positive coefficient because its prior excludes it. Other model terms may absorb the mismatch, so inspect their behavior too.
 
 ## 07 Day and Night
 
 ### 1. Equal night shares
 
-True wild and hatchery GE are now both 0.044. Borrowing pooled GE no longer has the timing problem: its wild abundance error falls from +36% to −12%. The remaining error comes from the shared estimate itself (0.050 this week), not from timing. Borrowing split GE does worse this week (−35%) because wild estimates its own night share from 59 fish. With equal night shares, splitting costs precision and buys nothing. One week is noisy; set `run.repeats <- TRUE` to see the average.
+The true pooled GE becomes equal for wild and hatchery. This removes the systematic timing mismatch. Finite-sample error remains, and estimating separate day/night rates can cost precision. Compare repeated, paired results rather than treating one simulated week as a guaranteed improvement.
 
 ### 2. No night effect
 
-With day and night GE equal (both 0.02), night share doesn't change pooled GE, so true wild and hatchery GE are the same. Both borrowing methods land close: 0.023 pooled (−12% abundance error) and 0.021 split (−6%). Wild alone estimates 0.072 (−70%), pulled up by its flat prior with few guided fish.
+When day and night GE both equal 0.02, night share cannot change pooled GE. Splitting is unnecessary for timing correction in this scenario. Low recovery and sparse wild histories can still leave large uncertainty and prior influence.
 
 ### 3. Twenty wild fish
 
-Only 16 wild fish are detected. Wild alone gives GE 0.219 with an interval of 0.067–0.434 and a −67% abundance error. Borrowing split narrows that to 0.061–0.204 (−43%). Borrowing pooled is unchanged at 0.050 (+37%), because hatchery fish dominate it. This week happened to have guided wild fish; with 20 fish, some weeks won't, and `run.repeats <- TRUE` counts them. All fits passed diagnostics.
+Look for zero guided fish and zero downstream overlaps, not just total detections. Compare uncertainty, prior sensitivity, and diagnostic failures. The posterior median of inverse GE stays defined when the posterior mean does not, but a finite median does not restore information absent from the sample.
+
+## 07a Closed-Form Day/Night Comparison
+
+This example already uses low nonguided recovery (123/3,785, about 3.25%). Its simulation and plot are unchanged by the low-recovery revision to the JAGS lessons.
+
+The previously checked seed-2025 run retains 1,997 of 2,000 complete seasons. Pooled borrowing has median season error +33.3% (middle 90%: +26.8% to +40.6%); split borrowing has +1.3% (-5.8% to +9.1%). Three wild week-15 samples lack GRS--GOJ overlap. These are conditional simulation-error summaries, not posterior intervals.
+
+Equal timing removes the imposed pooled timing mismatch. Reducing wild sample size increases the chance of failed estimation, so inspect exclusions as well as successful-only summaries. If wild and hatchery also differ in within-period GE, borrowing the split components need not remove bias.
 
 ## 08 Bootstrap
 
@@ -96,10 +112,12 @@ Coverage barely moves (fixed 35.7%, draws 96.0%, vs 36.0% and 95.3%), and median
 
 ## 09 Recover the Truth
 
+All repeats use nonguided GOJ recovery drawn from 1--6% and bypass recovery from 4--15%. These are chosen low-recovery simulation ranges around the talk's setting, not estimated uncertainty intervals. The signed logit contrast is derived from the two drawn probabilities. Recovery priors remain broad; the simulation ranges are not imposed as posterior bounds.
+
 ### 1. Five hundred tagged fish
 
-Every parameter gets less precise. Mean absolute error grows 2.4 to 3.2 times (psi 0.006 to 0.015, phi_B 0.026 to 0.068). Coverage stays between 94% and 98%, within binomial noise of 95%, and no fits failed diagnostics. With fewer fish the model is less precise but still honest about it.
+Expect fewer downstream overlaps and less information, but do not assume any particular error ranking or coverage percentage. Compare bias, absolute error, interval width, coverage, and fit failures with the 3,000-fish default. Check whether failures concentrate at the lowest recovery or smallest guided counts. Coverage among successful fits alone may overstate the method's overall reliability.
 
 ### 2. Two hundred repeats
 
-The binomial noise band around 95% shrinks from about ±6 to about ±3 points, and coverage lands between 94.5% and 97%. The ranking of mean absolute errors stays the same (psi smallest, then phi_S, p, trans, and phi_B largest). With more repeats, phi_B's small upward bias from the 50-repeat run (+0.014) mostly goes away (+0.002), so it was largely chance.
+More repeats reduce Monte Carlo uncertainty in estimated performance, not uncertainty within each individual data set. For 95% coverage, the rough binomial sampling band is about ±6 percentage points at 50 independent successful repeats and ±3 at 200. Use the number of successful repeats, and report failures alongside conditional coverage. New numerical bias and coverage results await the revised model runs.

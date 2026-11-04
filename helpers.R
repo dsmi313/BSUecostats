@@ -3,6 +3,14 @@
 # traditional diagnostics printed by jagsUI. Thresholds are initial screens;
 # inspect traces and Monte Carlo error for the actual summaries of interest.
 
+# Low GOJ recovery used to generate the dam teaching examples (05--07).
+# MY2025 wild season ratios from the talk. These are survival times GOJ
+# detection, NOT survival probabilities. They calibrate simulations, not priors.
+# Bypass recovery is conditional on return to river, excluding transport.
+dam_recovery_defaults <- function() {
+  c(phi_S = 123 / 3785, phi_B = 35 / 355)
+}
+
 fit_diagnostics <- function(fit) {
   if (is.null(fit) || is.null(fit$samples)) return(NULL)
   tryCatch({

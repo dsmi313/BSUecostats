@@ -25,6 +25,9 @@
 # Sharing guidance across rear types with different night shares can supply
 # additional identifying information, but precision may still be poor.
 # Equal p is a simplifying assumption here, not a universally untestable one.
+# Day/night guidance extends the GLM from 03: a daytime probability plus a
+# night shift on the logit scale. Detection and recovery are other probability
+# components, linked by the eleven-cell likelihood, not fitted separately.
 #
 # Why it matters: 06_hierarchical.R has wild fish borrow strength from the
 # far more numerous hatchery fish. Here wild and hatchery share the same true
@@ -81,8 +84,11 @@ night_eff <- 3.0
 psi_night <- plogis(qlogis(psi_day) + night_eff)
 a.true <- c(wild = 0.18, hatchery = 0.09)          # wild pass at night about twice as often
 n.tagged <- c(wild = 80, hatchery = 6000)          # wild is thin
-trans <- 0.60; phi_S <- 0.50; delta <- 0.40; p <- 0.40
-phi_B <- plogis(qlogis(phi_S) - delta)
+trans <- 0.60; p <- 0.40
+recovery <- dam_recovery_defaults()
+phi_S <- unname(recovery["phi_S"])  # about 3.25%, nonguided GOJ recovery
+phi_B <- unname(recovery["phi_B"])  # about 9.86%, bypassed and returned to river
+delta <- qlogis(phi_S) - qlogis(phi_B)  # signed contrast; either route can recover better
 ge.true <- (1 - a.true) * psi_day + a.true * psi_night
 print(round(ge.true, 3))
 
@@ -123,9 +129,9 @@ model {
 psi ~ dbeta(1, 1)                     # wild GE, pooled over day and night
 p ~ dbeta(1, 1)                       # GRS detection
 trans ~ dbeta(1, 1)                   # share of guided fish barged
-phi_S ~ dbeta(1, 1)                   # spilled fish: survive to GOJ and detected there
+phi_S ~ dbeta(1, 1)                   # nonguided: survive to GOJ and detected there
 # Reminder: JAGS's dnorm(mean, precision) uses precision = 1 / SD^2, not SD.
-delta ~ dnorm(0, 0.1)                 # bypassed fish penalty, logit scale
+delta ~ dnorm(0, 0.1)                 # signed recovery contrast, logit scale
 phi_B <- ilogit(logit(phi_S) - delta)
 
 # Cell probabilities
@@ -155,8 +161,8 @@ model {
 psi ~ dbeta(1, 1)                     # one pooled GE for both rears
 p ~ dbeta(1, 1)                       # GRS detection
 trans ~ dbeta(1, 1)                   # share of guided fish barged
-phi_S ~ dbeta(1, 1)                   # spilled fish: survive to GOJ and detected there
-delta ~ dnorm(0, 0.1)                 # bypassed fish penalty, logit scale
+phi_S ~ dbeta(1, 1)                   # nonguided: survive to GOJ and detected there
+delta ~ dnorm(0, 0.1)                 # signed recovery contrast, logit scale
 phi_B <- ilogit(logit(phi_S) - delta)
 
 # Cell probabilities, the same for both rears
@@ -195,8 +201,8 @@ night_eff ~ dnorm(0, 0.1)             # night shift on the logit scale, shared
 psi_night <- ilogit(logit(psi_day) + night_eff)
 p ~ dbeta(1, 1)                       # GRS detection
 trans ~ dbeta(1, 1)                   # share of guided fish barged
-phi_S ~ dbeta(1, 1)                   # spilled fish: survive to GOJ and detected there
-delta ~ dnorm(0, 0.1)                 # bypassed fish penalty, logit scale
+phi_S ~ dbeta(1, 1)                   # nonguided: survive to GOJ and detected there
+delta ~ dnorm(0, 0.1)                 # signed recovery contrast, logit scale
 phi_B <- ilogit(logit(phi_S) - delta)
 
 for (r in 1:2) {

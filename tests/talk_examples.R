@@ -33,7 +33,7 @@ withCallingHandlers(choose_strata(c(1,1), c(0,0), c(1,1)),
 stopifnot(warned)
 
 load_definition("05_six_cell.R", "transport.summary")
-n <- c(c1=40, c2=30, c3=180, c4=180, c5=270, c6=90)
+n <- c(c1=63, c2=7, c3=349, c4=11, c5=16, c6=90)
 changed <- n
 changed["c1"] <- n["c1"] + n["c6"]
 changed["c6"] <- 0
