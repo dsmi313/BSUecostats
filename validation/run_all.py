@@ -30,6 +30,8 @@ add('04a_constp','04a',[('   p[t] ~ dunif(0, 1)           # Priors for recapture
 add('04a_seed','04a',[('set.seed(1)','set.seed(7)')])
 add('04b_lowp','04b',[('p <- rep(0.5, n.occasions)','p <- rep(0.2, n.occasions)')])
 add('04b_fewrows','04b',[('nz <- 300','nz <- 30')])
+add('04c_fewer','04c',[('marked <- rep(50, n.occasions)','marked <- rep(10, n.occasions)')])
+add('04c_tight','04c',[('rk.model("dbeta(4.2, 2.8)")','rk.model("dbeta(42, 28)")')])
 add('05_facility','05',[('n.facility <- 1500','n.facility <- 5000')])
 add('05_small','05',[('n.tagged <- 6000','n.tagged <- 600')])
 # Only change the prior in the no-GOJ model.

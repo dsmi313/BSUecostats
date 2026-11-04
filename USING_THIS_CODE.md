@@ -26,6 +26,8 @@ likelihood. We do not observe all component outcomes and fit separate GLMs.
 
 **04b Jolly-Seber.** The same kind of data as CJS, when you also want population size and recruitment at each occasion. Animals must be caught at random from the population, because first captures now carry information about N.
 
+**04c Mark-recovery.** Marked animals reported dead: angler tag returns, harvested waterfowl bands, rings found by the public. Survival and reporting are estimated together. Reporting rates vary with harvest and public effort, so check whether yours is constant before assuming it.
+
 **05 Six-cell multistate model.** Any system where animals take one of several hidden routes or states, and you see them at some detection sites and not others: dam passage, river junctions, breeding states, habitat use. The route is the hidden state; the detection histories are the data.
 
 **06 Hierarchical model.** Many small groups that are alike but not identical: weeks, sites, streams, years. Thin groups borrow strength from the rest, and well-sampled groups mostly speak for themselves.

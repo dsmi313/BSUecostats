@@ -127,6 +127,8 @@ The detection-history likelihood here connects guidance, detection, and recovery
 
 **Prior.** What you believe about a parameter before seeing the data.
 
+**Recovery probability (mark-recovery).** The chance a marked animal that died is found and reported. Different from recovery in the dam lessons, which means surviving to Little Goose and being detected there.
+
 **Rhat.** Compares variation between chains to variation within chains. Near 1 supports agreement. These lessons also check rank-normalized split Rhat <= 1.01, bulk/tail effective sample sizes >= 400, and trace plots. No single diagnostic proves convergence.
 
 **Sampling distribution.** All the estimates you could have gotten from repeating the same study under the same truth.

@@ -40,6 +40,10 @@ M0 falls further: 79 (78–82), with 78 of 100 caught. Mh gives 110 (86–192). 
 
 The posterior median is 98 (95% CrI 74–159) against Lincoln-Petersen's 97 and truth 100, with 62 animals caught. With two occasions, Mt is Lincoln-Petersen. The interval is about 1.7 times as wide as with three occasions (91–140), because only one recapture sample informs p.
 
+### 3. No trap response
+
+With c = p = 0.3, the trap-response interval is −0.09 to 0.06 (estimate −0.01) and includes zero, as it should. N is 199 (184–222) against truth 200. In the default run the interval is 0 to 0.15, with its lower end at zero: 167 animals and five occasions barely detect a true response of 0.1.
+
 ## 03 Bernoulli Logit
 
 ### 1. Fifty fish
@@ -83,6 +87,22 @@ In the default run, 282 of 400 animals are caught. The superpopulation is 403 (9
 ### 1. Capture probability 0.2
 
 Only 166 animals are caught. The 300 augmented rows are no longer enough: 12% of Nsuper draws sit at the ceiling of 466, so the upper end of its interval (395–466) is truncated, and the fit fails the diagnostic screen. Intervals for N at each occasion are three to four times wider and centered too high (for example 225, 146–340, against truth 146 at occasion 6). Low capture probability needs more augmentation and longer chains, and it still leaves N poorly determined.
+
+### 2. Thirty augmented rows
+
+With only 312 rows for 282 animals caught, 55% of Nsuper draws sit at the ceiling, and its interval (308–312) excludes the truth, 400. The fit fails the diagnostic screen, but the ceiling share is the clearer warning. Capture probability is biased high (0.591, 0.529–0.653, against 0.5), because the model must explain the data with too few uncaught animals. Survival is barely affected (0.720).
+
+## 04c Mark-Recovery
+
+In the default run, 700 animals are marked and 598 never recovered. Survival is 0.831 (95% CrI 0.772–0.888) against truth 0.8, and recovery 0.220 (0.176–0.285) against 0.2. For the red kites, juvenile survival is 0.433 (0.249–0.791) with the Beta(4.2, 2.8) prior and 0.377 (0.214–0.775) with the flat prior, close to the book's results. Adult survival is 0.84 (0.78–0.90) under both. The informative prior barely narrows juvenile survival, as the book also finds.
+
+### 1. Ten marked per occasion
+
+Survival widens from 0.772–0.888 to 0.686–0.956, about 2.3 times wider, and recovery from 0.176–0.285 to 0.128–0.520, about 3.6 times. Only 19 of 140 animals are recovered.
+
+### 2. A tighter prior, Beta(42, 28)
+
+Juvenile survival becomes 0.572 (0.454–0.683), close to the prior's mean of 0.6, compared with 0.377 under the flat prior. The prior now dominates: the data are too weak to pull it away. Adult survival doesn't change (0.84). A prior this tight needs strong outside evidence to justify it.
 
 ## 05 Six-Cell Multistate Model
 
