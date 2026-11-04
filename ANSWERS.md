@@ -76,6 +76,14 @@ The last survival is now identified, at 0.18–0.56, but that interval misses th
 
 The check no longer catches the constant model (p = 0.384). With 30 animals marked per year, the check has little power. A passing check means this check couldn't detect misfit, not that the model is right. With seed 7, section 1's recapture interval (0.415–0.607) also misses its truth, 0.4, as about 1 in 20 intervals should.
 
+## 04b Jolly-Seber
+
+In the default run, 282 of 400 animals are caught. The superpopulation is 403 (95% CrI 366–451) against truth 400, survival 0.723 (0.669–0.777) against 0.7, and capture 0.458 (0.387–0.528) against 0.5. Every occasion's N interval contains the truth. With `set.seed(10)` instead, a direct run that also passed diagnostics gave 455 (411–517), missing the truth, a reminder that 95% intervals miss sometimes.
+
+### 1. Capture probability 0.2
+
+Only 166 animals are caught. The 300 augmented rows are no longer enough: 12% of Nsuper draws sit at the ceiling of 466, so the upper end of its interval (395–466) is truncated, and the fit fails the diagnostic screen. Intervals for N at each occasion are three to four times wider and centered too high (for example 225, 146–340, against truth 146 at occasion 6). Low capture probability needs more augmentation and longer chains, and it still leaves N poorly determined.
+
 ## 05 Six-Cell Multistate Model
 
 Default GOJ recovery is 3.25% for nonguided fish and 9.86% for bypassed fish returned to river. These combine survival and downstream detection. In the verified default fit, GE is 0.094 (95% CrI 0.078–0.111), against truth 0.100. Longer default chains now allow all four fits, including the facility-tag and no-GOJ examples, to pass the diagnostic screen.
