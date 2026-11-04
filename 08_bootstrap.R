@@ -44,15 +44,35 @@ slide.catches <- rbinom(slide.B, round(slide.passage), slide.p)
 slide.expanded <- slide.catches / slide.p
 cat("Talk example: passage", slide.passage, "from", slide.catch, "caught\n")
 cat("First bootstrap catches:", head(slide.catches), "\n")
-cat("Simulated middle 90%:", round(quantile(slide.expanded, c(0.05, 0.95))), "\n")
-# The slide reports 3,446 to 4,554 from a particular 2,000-replicate run.
-# Its RNG state was not supplied. These finite-simulation endpoints can vary.
-# The exact binomial quantiles are a reproducible reference, not a bootstrap:
+slide.lim <- quantile(slide.expanded, c(0.05, 0.95))
+cat("Simulated middle 90%:", round(slide.lim), "\n")
+# The slide uses this run: 3,445 to 4,585. Another seed gives slightly
+# different endpoints. The exact binomial quantiles are a reproducible
+# reference, not a bootstrap:
 slide.exact <- qbinom(c(0.05, 0.95), round(slide.passage), slide.p) / slide.p
 cat("Exact binomial middle-90% endpoints:", round(slide.exact), "\n")
-# Exact endpoints round to 3,446 and 4,585. Do not label the slide's simulated
-# upper endpoint (4,554) as an exact quantile or tune a seed to force agreement.
 stopifnot(abs(slide.passage - 4000) < 1e-8)
+
+# The slide's histogram of these 2,000 rounds. Plotting draws no random
+# numbers, so the sections below are unchanged.
+slide.hist <- as.data.frame(table(expanded = slide.expanded))
+slide.hist$expanded <- as.numeric(as.character(slide.hist$expanded))
+slide.hist$band <- ifelse(slide.hist$expanded >= slide.lim[1] & slide.hist$expanded <= slide.lim[2],
+                          "Middle 90%", "Outer 10%")
+p0 <- ggplot(slide.hist, aes(expanded, Freq, fill = band)) +
+  geom_col(width = 24) +
+  scale_fill_manual(values = c("Middle 90%" = "#1F6F78", "Outer 10%" = "#BFC7CB"), name = NULL) +
+  scale_x_continuous(labels = scales::comma, breaks = seq(2500, 5500, 500), limits = c(2450, 5550)) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  labs(x = NULL, y = "Rounds", title = "Fish past the dam, 2,000 bootstrap rounds") +
+  theme_minimal(base_size = 15) +
+  theme(legend.position = "top", plot.title = element_text(hjust = 0.5, size = 15),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        axis.line.x = element_line(color = "#5B6B73"),
+        plot.background = element_rect(fill = "white", color = NA))
+print(p0)
+# To save the slide's file: ggsave("boot_hist_slide8.png", p0, width = 6.33,
+#   height = 4.1, dpi = 250, bg = "white")
 
 set.seed(8)
 

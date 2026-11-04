@@ -19,6 +19,10 @@ stopifnot(isTRUE(all.equal((1 - c(.1, .4)) * c(.04, .02) +
 stopifnot(abs(1 - prod(1 - c(.64, .61, .53)) - .934012) < 1e-12)
 stopifnot(identical(as.numeric(round(qbinom(c(.05, .95), 4000, .0325) / .0325)),
                     c(3446, 4585)))
+# The slide's simulated interval: the same draws as 08_bootstrap.R, section 0.
+set.seed(20261029)
+stopifnot(identical(as.numeric(round(quantile(rbinom(2000, 4000, .0325) / .0325,
+                                              c(.05, .95)))), c(3445, 4585)))
 
 load_definition("06_hierarchical.R", "choose_strata")
 # Strictly greater than 10, plus backward merging of an inadequate tail.
