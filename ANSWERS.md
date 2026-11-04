@@ -36,6 +36,10 @@ In the default run, M0 with 150 augmented rows gives N 100 (95% CrI 92–111) ag
 
 M0 falls further: 79 (78–82), with 78 of 100 caught. Mh gives 110 (86–192). Its interval still contains the truth but is about twice as wide as with SD 1. When some animals are rarely caught, the data say little about how many were never caught.
 
+### 2. Two occasions
+
+The posterior median is 98 (95% CrI 74–159) against Lincoln-Petersen's 97 and truth 100, with 62 animals caught. With two occasions, Mt is Lincoln-Petersen. The interval is about 1.7 times as wide as with three occasions (91–140), because only one recapture sample informs p.
+
 ## 03 Bernoulli Logit
 
 ### 1. Fifty fish
