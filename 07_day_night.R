@@ -1,4 +1,6 @@
 # Day and night: why split GE before wild borrows from hatchery
+# For the talk's fast, eight-week closed-form figure (no JAGS), run
+# 07a_day_night_closed_form.R. This lesson fits the Bayesian teaching models.
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
 # (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
 #

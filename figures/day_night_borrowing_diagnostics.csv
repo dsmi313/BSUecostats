@@ -1,0 +1,27 @@
+"component","week","reason","Freq"
+"hatchery","15","ok",2000
+"hatchery","16","ok",2000
+"hatchery","17","ok",2000
+"hatchery","18","ok",2000
+"hatchery","19","ok",2000
+"hatchery","20","ok",2000
+"hatchery","21","ok",2000
+"hatchery","22","ok",2000
+"wild","15","no GRS-GOJ overlap",3
+"wild","15","ok",1997
+"wild","16","ok",2000
+"wild","17","ok",2000
+"wild","18","ok",2000
+"wild","19","ok",2000
+"wild","20","ok",2000
+"wild","21","ok",2000
+"wild","22","ok",2000
+"pair","15","ok",1997
+"pair","16","ok",2000
+"pair","17","ok",2000
+"pair","18","ok",2000
+"pair","19","ok",2000
+"pair","20","ok",2000
+"pair","21","ok",2000
+"pair","22","ok",2000
+"pair","15","rear estimation failed",3
