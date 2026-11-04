@@ -32,16 +32,29 @@ Run [00_setup.R](00_setup.R) first. It installs any missing packages, checks tha
 
 ## Quick start
 
-1. Download this repository using **Code → Download ZIP**, then extract it.
-2. Open R or RStudio and set the working directory to the extracted folder.
-3. Run the setup check:
+1. Open R or RStudio and run:
 
    ```r
+   getwd()
+   ```
+
+   This prints your current working directory. Keep that folder open in File Explorer.
+
+2. Download this repository using **Code → Download ZIP**.
+
+3. Extract the ZIP. Open the extracted `BSUecostats-main` folder, then copy **everything inside it** into the working directory printed by `getwd()`. Keep the `tests` and `figures` subfolders intact. The files `00_setup.R` and `helpers.R` should sit directly in your working directory, not inside another `BSUecostats-main` subfolder. A ZIP file will not appear as a folder in R's working-directory chooser.
+
+4. Check that R can see the setup script, then run it:
+
+   ```r
+   file.exists("00_setup.R")  # should print TRUE
    source("00_setup.R")
    ```
 
-4. Begin with [01_first_bayesian_model.R](01_first_bayesian_model.R). Run one numbered lesson at a time, reading the comments and inspecting the plots.
-5. Keep the [glossary](GLOSSARY.md) handy; see [Using This Code](USING_THIS_CODE.md) to adapt an example.
+   If the check prints `FALSE`, compare `getwd()` with the folder containing `00_setup.R` and move the extracted contents into that folder.
+
+5. Begin with [01_first_bayesian_model.R](01_first_bayesian_model.R). Run one numbered lesson at a time, reading the comments and inspecting the plots.
+6. Keep the [glossary](GLOSSARY.md) handy; see [Using This Code](USING_THIS_CODE.md) to adapt an example.
 
 The numbered R scripts and `helpers.R` stay together so they can be run directly from this folder. The helper checks rank-normalized split Rhat (<= 1.01), bulk/tail effective sample sizes (>= 400), and missing diagnostics. These are screening thresholds, not proof of convergence. Inspect trace plots and Monte Carlo error too.
 
