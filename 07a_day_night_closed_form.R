@@ -29,7 +29,31 @@
 # weeks to be valid. Failures are reported, including their causes. Summaries
 # are conditional on successful estimation, which matters for sparse trials.
 
+# 0. The talk's MY2025 season counts by day and night ----
+# Slide "Day and Night GE Are Very Different": wild steelhead cells split by
+# LGR passage time. PTAGIS times are PST all year; night is before sunrise or
+# after sunset at the dam. c5 fish were never seen at LGR, so they have no
+# passage time and only the total is known.
+# Time zone matters: reading the times as daylight time instead of PST
+# shifts the split by an hour around dawn and dusk and gives about 1.2% by
+# day, 23% at night, and 17% passing at night.
+diel <- rbind(day   = c(c1 = 54,  c2 = 15, c3 = 3213, c4 = 100, c6 = 15),
+              night = c(c1 = 266, c2 = 20, c3 = 449,  c4 = 23,  c6 = 141))
+c5 <- 195
+stopifnot(all(colSums(diel) == c(320, 35, 3662, 123, 156)))   # 05 section 3b totals
+p.season <- sum(diel[, "c4"]) / (sum(diel[, "c4"]) + c5)   # one p, day and night
+guided <- diel[, "c1"] + diel[, "c2"] + diel[, "c6"]
+nonguided <- (diel[, "c3"] + diel[, "c4"]) / p.season
+diel.ge <- guided / (guided + nonguided)
+night.share <- unname((guided + nonguided)["night"] / sum(guided + nonguided))
+print(round(diel.ge, 3))
+cat("Share of wild fish passing at night:", round(night.share, 3), "\n")
+stopifnot(isTRUE(all.equal(round(c(diel.ge, night.share), 3), c(0.010, 0.259, 0.160),
+                           check.attributes = FALSE)))
+
 # 1. Observed calibration inputs ----
+# MY2025 weekly PIT counts for weeks 15 to 22. The day/night convention used
+# to split them (PST or daylight time) is not recorded here; section 0 uses PST.
 borrow_inputs <- function() {
   wk <- data.frame(
     week = 15:22,
