@@ -1,5 +1,10 @@
 # How Many Fish Are There? Mark-Recapture with JAGS
 
+> **Start here.** Run [00_setup.R](00_setup.R) first, then:
+>
+> - **New to Bayesian models?** Run [01](01_first_bayesian_model.R), [02](02_lincoln_petersen.R), then [05](05_six_cell.R).
+> - **Here for the talk's main results?** Run [05](05_six_cell.R), [06](06_hierarchical.R), then [07a](07a_day_night_closed_form.R).
+
 **First, download and install JAGS:** https://sourceforge.net/projects/mcmc-jags/ (JAGS is a separate program from R; install it before the R packages, then restart R.)
 
 Companion code for the BSU ecological statistics group talk on IDFG mark-recapture, from screw traps to Lower Granite Dam.
@@ -133,6 +138,22 @@ the fitted prior excludes positive values.
 | [09_recover_truth.R](09_recover_truth.R) | A small simulation study: bias and 95% interval coverage over 50 simulated data sets. | Does it recover GE? |
 
 Every lesson script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Plain-R examples are quick; JAGS fits and repeated studies can take minutes or longer. The default lessons, exercises, and optional repeated studies were executed on 4 November 2026; see [validation results](validation/results/) for versions and diagnostic outcomes. Some sparse-data exercises need longer sampling, and repeated studies retain explicit failure counts. In `06` and `07`, single-example and model-check/prior-sensitivity sections run by default. Repeated simulation studies are off: set `run.repeats <- TRUE` at the top of either script to add them.
+
+## What to expect when you run each script
+
+Run times and printed numbers below come from running each script unchanged on 4 November 2026, on two Linux machines; times varied by up to about 2×, so yours will differ. Printed numbers should match closely, though JAGS results can shift slightly with software versions. Except for `07a`, the scripts draw their plots on screen and don't save them. Each linked image is a reference copy of one plot from that script, so you can check yours against it.
+
+- [00_setup.R](00_setup.R): a few seconds if the packages are installed. Prints "JAGS is working. You're ready for 01 to 09." and your software versions. No plot.
+- [01_first_bayesian_model.R](01_first_bayesian_model.R): under 5 seconds. Prints posterior mean of p 0.173 (95% CrI 0.084–0.286); JAGS gives 0.172 (0.082–0.285). Reference plot: [JAGS draws vs the exact posterior](figures/01_first_bayesian_model.png).
+- [02_lincoln_petersen.R](02_lincoln_petersen.R): under 5 seconds. Prints the talk's Bailey estimate 9,533 (plain Petersen 10,000), and a +1-adjusted mean of 3,984 against truth 4,000. Reference plot: [Jensen's inequality, C / mean(p) vs mean(C / p)](figures/02_lincoln_petersen.png).
+- [03_bernoulli_logit.R](03_bernoulli_logit.R): under 5 seconds. Prints spill slope b1 = −0.71 (95% CrI −0.96 to −0.47), truth −0.8. Reference plot: [the fitted S-curve](figures/03_bernoulli_logit.png).
+- [04_state_space_screwtrap.R](04_state_space_screwtrap.R): about 2–3 minutes, the slowest default. Prints season total 6,060 (95% CrI 5,190–7,145) against truth 6,284; the counts-only model gives 1,235, tracking N × p (1,208). Reference plot: [daily abundance](figures/04_state_space_screwtrap.png).
+- [05_six_cell.R](05_six_cell.R): 10–35 seconds. Prints the talk's MY2025 GE steps 0.12 → 0.11 → 0.05, then simulated-data GE 0.094 (95% CrI 0.078–0.111) against truth 0.10. Reference plot: [without GOJ, GE and detection trade off](figures/05_six_cell.png).
+- [06_hierarchical.R](06_hierarchical.R): 15–30 seconds. Prints wild weekly GE mean absolute error 0.102 fitting each week alone vs 0.049 hierarchical, and predictive-check p = 0.456 (matching data) and 0.000 (rising detection). Reference plot: [one season of wild weekly GE](figures/06_hierarchical.png).
+- [07_day_night.R](07_day_night.R): under 10 seconds. Prints true wild GE 0.069 and estimates of 0.122 (wild alone), 0.047 (borrow pooled), and 0.083 (borrow split). Reference plot: [one week, three methods](figures/07_day_night.png).
+- [07a_day_night_closed_form.R](07a_day_night_closed_form.R): about 5 seconds. Prints median season error +33.3% for pooled borrowing vs +1.3% split (1,997 of 2,000 seasons). Saves [figures/day_night_borrowing.png](figures/day_night_borrowing.png), an SVG, and summary CSVs.
+- [08_bootstrap.R](08_bootstrap.R): about 10 seconds. Prints the talk example's 90% interval 3,445–4,585, and 95% interval coverage of 36% with GE held fixed vs 95.3% with GE draws. Reference plot: [95% intervals for 40 simulated weeks](figures/08_bootstrap.png).
+- [09_recover_truth.R](09_recover_truth.R): 30–45 seconds. Prints that 48 of 50 fits pass diagnostics, with 95.8% coverage for GE among them. Saves failure details in `diagnostics/`. Reference plot: [estimate vs truth](figures/09_recover_truth.png).
 
 ## Real data to try
 
