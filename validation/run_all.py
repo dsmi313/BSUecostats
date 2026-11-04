@@ -34,6 +34,10 @@ add('06_positive_restricted','06',[('beta <- -0.8','beta <- 0.4')])
 add('06_positive_free','06',[('beta <- -0.8','beta <- 0.4'),('restrict.spill <- TRUE','restrict.spill <- FALSE')])
 add('06_repeats','06',[('run.repeats <- FALSE','run.repeats <- TRUE')])
 add('06_variable_long','06',[('sigma_psi <- 0.3','sigma_psi <- 0.8')])
+# Optional loop plus longer chains for the two predictive-check fits only.
+add('06_repeats_long','06',[('run.repeats <- FALSE','run.repeats <- TRUE'),
+ ('"ge_hierarchical_ppc.jags",\n       n.chains = 3, n.iter = 10000, n.burnin = 5000',
+  '"ge_hierarchical_ppc.jags",\n       n.chains = 3, n.iter = 40000, n.burnin = 20000')])
 add('07_equal','07',[('a.true <- c(wild = 0.18','a.true <- c(wild = 0.09')])
 add('07_zero','07',[('night_eff <- 3.0','night_eff <- 0')])
 add('07_small','07',[('n.tagged <- c(wild = 80','n.tagged <- c(wild = 20')])
