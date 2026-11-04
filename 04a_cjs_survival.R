@@ -353,6 +353,97 @@ p2 <- ggplot(ppc.df, aes(observed, simulated)) +
   theme_bw(base_size = 13)
 print(p2)
 
+# 4. Real data: female Leisler's bats (BPA 7.11) ----
+# The book's m-array for 19 years of captures of female Leisler's bats.
+# Survival now varies among years as a random effect (BPA 7.4.2): logit(phi)
+# is the mean plus a yearly deviation with SD sigma, as in lesson 06.
+
+m.leisleri <- matrix(c(4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,
+0,5,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,
+0,0,9,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,
+0,0,0,10,2,0,0,0,0,0,0,0,0,0,0,0,0,0,5,
+0,0,0,0,10,2,1,0,0,0,0,0,0,0,0,0,0,0,6,
+0,0,0,0,0,15,0,0,0,0,0,0,0,0,0,0,0,0,6,
+0,0,0,0,0,0,11,2,0,1,0,0,0,0,0,0,0,0,19,
+0,0,0,0,0,0,0,12,1,1,0,0,0,0,0,0,0,0,6,
+0,0,0,0,0,0,0,0,13,2,0,0,0,0,0,0,0,0,4,
+0,0,0,0,0,0,0,0,0,14,0,0,0,0,0,0,0,0,6,
+0,0,0,0,0,0,0,0,0,0,13,1,0,0,0,1,0,0,8,
+0,0,0,0,0,0,0,0,0,0,0,15,3,1,0,0,0,0,12,
+0,0,0,0,0,0,0,0,0,0,0,0,12,4,0,1,0,0,7,
+0,0,0,0,0,0,0,0,0,0,0,0,0,19,2,0,0,0,3,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,28,1,0,0,4,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,22,7,2,21,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,12,2,21,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,14,18), ncol = 19, nrow = 18, byrow = TRUE)
+
+cat(file = "cjs-mnl-ran.jags", "
+model {
+# Priors and constraints
+for (t in 1:(n.occasions-1)){
+   logit(phi[t]) <- mu + epsilon[t]
+   epsilon[t] ~ dnorm(0, tau)
+   p[t] <- mean.p
+   }
+mean.phi ~ dunif(0, 1)             # Prior for mean survival
+mu <- log(mean.phi / (1-mean.phi)) # Logit transformation
+sigma ~ dunif(0, 5)                # Prior for standard deviation
+tau <- pow(sigma, -2)
+sigma2 <- pow(sigma, 2)
+mean.p ~ dunif(0, 1)               # Prior for mean recapture
+# Define the multinomial likelihood
+for (t in 1:(n.occasions-1)){
+   marr[t,1:n.occasions] ~ dmulti(pr[t,], rel[t])
+   }
+# Define the cell probabilities of the m-array:
+# Main diagonal
+for (t in 1:(n.occasions-1)){
+   q[t] <- 1-p[t]
+   pr[t,t] <- phi[t]*p[t]
+   # Above main diagonal
+   for (j in (t+1):(n.occasions-1)){
+      pr[t,j] <- prod(phi[t:j])*prod(q[t:(j-1)])*p[j]
+      } #j
+   # Below main diagonal
+   for (j in 1:(t-1)){
+      pr[t,j]<-0
+      } #j
+   } #t
+# Last column: probability of non-recapture
+for (t in 1:(n.occasions-1)){
+   pr[t,n.occasions] <- 1-sum(pr[t,1:(n.occasions-1)])
+   } # t
+# Assess model fit using Freeman-Tukey statistic
+for (t in 1:(n.occasions-1)){
+   for (j in 1:n.occasions){
+      expmarr[t,j] <- rel[t]*pr[t,j]
+      E.org[t,j] <- pow((pow(marr[t,j], 0.5)-pow(expmarr[t,j], 0.5)), 2)
+      }
+   }
+for (t in 1:(n.occasions-1)){
+   marr.new[t,1:n.occasions] ~ dmulti(pr[t,], rel[t])
+   for (j in 1:n.occasions){
+      E.new[t,j] <- pow((pow(marr.new[t,j], 0.5)-pow(expmarr[t,j], 0.5)), 2)
+      }
+   }
+fit <- sum(E.org[,])
+fit.new <- sum(E.new[,])
+}
+")
+
+leis.data <- list(marr = m.leisleri, n.occasions = dim(m.leisleri)[2], rel = rowSums(m.leisleri))
+leis.inits <- function(){list(mean.phi = runif(1, 0, 1), sigma = runif(1, 0, 5), mean.p = runif(1, 0, 1))}
+# The book runs 5,000 iterations. Longer chains pass the diagnostic screen.
+leis.result <- jags(leis.data, leis.inits, c("mean.p", "mean.phi", "sigma", "fit", "fit.new"),
+                    "cjs-mnl-ran.jags", n.chains = nc, n.thin = 6, n.iter = 25000, n.burnin = 5000,
+                    parallel = TRUE)
+print(leis.result, digits = 3)
+if (!fit_ok(leis.result)) warning("Bat CJS fit: diagnostics need attention before interpreting results.")
+cat("Bats: mean survival", round(leis.result$mean$mean.phi, 3), " 95% CrI",
+    round(quantile(leis.result$sims.list$mean.phi, c(0.025, 0.975)), 3),
+    "; recapture", round(leis.result$mean$mean.p, 3),
+    "; Bayesian p-value", round(mean(leis.result$sims.list$fit.new > leis.result$sims.list$fit), 3), "\n")
+
 # Try this ----
 # Predict before rerunning; reset each change before trying the next.
 # 1. In section 1, set marked <- rep(10, n.occasions-1). How much wider do the
@@ -372,6 +463,7 @@ print(p2)
 #   model, much faster than one row per animal.
 # - The last survival and recapture can't be separated without another
 #   occasion, only their product. Lesson 05 needs GOJ for the same reason.
+# - Real data work the same way: the bat m-array goes straight into the model.
 # - A posterior predictive check compares the data with data the model could
 #   have produced. A failing check is evidence of misfit; a passing check
 #   only means this check couldn't tell.
@@ -384,4 +476,4 @@ print(p2)
 # - 7.9  Parameter identifiability, the example in section 2
 # - 7.10  The m-array and the multinomial likelihood, with the
 #         Freeman-Tukey check used in section 3
-# - 7.11  Real data: survival of female Leisler's bats
+# - 7.11  Real data: survival of female Leisler's bats, section 4 here

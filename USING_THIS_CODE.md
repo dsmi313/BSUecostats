@@ -8,6 +8,8 @@ The scripts are built around fish passing a dam, but the models are general. If 
 
 **02 Trap efficiency.** Any study where you release a known number of marked animals and count how many come back: trap efficiency trials, mark-resight, survey recapture. Use it to see how sampling noise moves the estimate, why a small number of recaptures needs the +1 adjustment, and why 1 / (average detection) and the average of 1 / detection differ.
 
+**02a Closed-population models.** Several capture occasions on a population with no births, deaths, or movement during the study: small-mammal grids, snorkel or electrofishing passes, camera or genetic recaptures. Choose the model by what changes capture probability: occasion (Mt), previous capture (Mb), or the individual (Mh). If catchability varies among animals, M0 and Lincoln-Petersen run low.
+
 **03 Logit GLM.** Any yes/no outcome with covariates: survival to a site, presence at a plot, nest success, a fish taking one route or another. The pattern (Bernoulli trial, logit link, linear predictor) is the building block for everything after it.
 
 Many Bayesian ecological models link familiar GLMs through shared parameters
@@ -19,6 +21,10 @@ likelihood. We do not observe all component outcomes and fit separate GLMs.
 
 - Counts alone estimate an index (N × p), not N. To get N you need separate data on detection, such as efficiency trials, double observers, or marked animals.
 - Missing days or years can be left as `NA`. The model estimates them from the days around them.
+
+**04a CJS survival.** Marked animals recaptured or resighted over time: banded birds, PIT-tagged fish passing a series of dams or antennas, tagged turtles. It estimates survival and detection separately, but not population size. With time-varying parameters, the last survival and detection are confounded. Use the m-array when animals share parameters; use individual histories for individual covariates.
+
+**04b Jolly-Seber.** The same kind of data as CJS, when you also want population size and recruitment at each occasion. Animals must be caught at random from the population, because first captures now carry information about N.
 
 **05 Six-cell multistate model.** Any system where animals take one of several hidden routes or states, and you see them at some detection sites and not others: dam passage, river junctions, breeding states, habitat use. The route is the hidden state; the detection histories are the data.
 

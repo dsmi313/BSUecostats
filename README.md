@@ -8,7 +8,7 @@ Most scripts simulate data from known values, fit a model, and check the answer 
 >
 > - **New to Bayesian models?** Run [01](01_first_bayesian_model.R), [02](02_lincoln_petersen.R), then [05](05_six_cell.R).
 > - **Here for the talk's main results?** Run [05](05_six_cell.R), [06](06_hierarchical.R), then [07a](07a_day_night_closed_form.R).
-> - **Want the standard capture-recapture models?** Run [02a](02a_closed_population.R) (population size) and [04a](04a_cjs_survival.R) (survival), taken from Kéry and Schaub.
+> - **Want the standard capture-recapture models?** Run [02a](02a_closed_population.R) (population size), [04a](04a_cjs_survival.R) (survival), and [04b](04b_jolly_seber.R) (both), taken from Kéry and Schaub.
 
 ## Setup
 
@@ -32,7 +32,8 @@ Times and printed numbers come from running each script unchanged on 4 November 
 
 - [02a_closed_population.R](02a_closed_population.R): population size from capture histories with data augmentation, models M0, Mt, Mb, and Mh (Kéry and Schaub, ch. 6). *About 3–4 minutes.* Prints N 100 (92–111), truth 100; with heterogeneous catchability, M0 gives 89 (86–93) and Mh 104 (90–145). [Plot](figures/02a_closed_population.png)
 - [04_state_space_screwtrap.R](04_state_space_screwtrap.R): a state-space model for daily screw trap passage. Counts alone estimate N × p; efficiency trials recover N. *About 2–3 minutes.* Prints season total 6,060 (5,190–7,145), truth 6,284. [Plot](figures/04_state_space_screwtrap.png)
-- [04a_cjs_survival.R](04a_cjs_survival.R): survival from recaptures with the Cormack-Jolly-Seber model, the m-array, identifiability, and a fit check (Kéry and Schaub, ch. 7). *About 15–25 seconds.* Prints survival 0.652 (0.577–0.731), truth 0.65; check p-values 0.486 for the right model and 0.005 for the wrong one. [Plot](figures/04a_cjs_survival.png)
+- [04a_cjs_survival.R](04a_cjs_survival.R): survival from recaptures with the Cormack-Jolly-Seber model, the m-array, identifiability, and a fit check (Kéry and Schaub, ch. 7). *About 1 minute.* Prints survival 0.652 (0.577–0.731), truth 0.65; check p-values 0.486 for the right model and 0.005 for the wrong one; then fits real data on Leisler's bats. [Plot](figures/04a_cjs_survival.png)
+- [04b_jolly_seber.R](04b_jolly_seber.R): survival, recruitment, and population size at each occasion with the Jolly-Seber model (Kéry and Schaub, ch. 10). *About 5–8 minutes, the slowest script.* Prints superpopulation 403 (366–451), truth 400. [Plot](figures/04b_jolly_seber.png)
 - [05_six_cell.R](05_six_cell.R): the multistate model at Lower Granite: six detection cells, conditioning on detection, and two ways it goes wrong. *10–35 seconds.* Prints the talk's GE steps 0.12 → 0.11 → 0.05, then GE 0.094 (0.078–0.111), truth 0.10. [Plot](figures/05_six_cell.png)
 
 ### Graduate level

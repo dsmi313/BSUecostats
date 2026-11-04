@@ -28,6 +28,8 @@ add('04_small_long','04',[('M <- rep(30,','M <- rep(10,'),('ni <- 60000; nb <- 3
 add('04a_fewer','04a',[('marked <- rep(50, n.occasions-1)','marked <- rep(10, n.occasions-1)')])
 add('04a_constp','04a',[('   p[t] ~ dunif(0, 1)           # Priors for recapture\n   }','   p[t] <- mean.p\n   }\nmean.p ~ dunif(0, 1)')])
 add('04a_seed','04a',[('set.seed(1)','set.seed(7)')])
+add('04b_lowp','04b',[('p <- rep(0.5, n.occasions)','p <- rep(0.2, n.occasions)')])
+add('04b_fewrows','04b',[('nz <- 300','nz <- 30')])
 add('05_facility','05',[('n.facility <- 1500','n.facility <- 5000')])
 add('05_small','05',[('n.tagged <- 6000','n.tagged <- 600')])
 # Only change the prior in the no-GOJ model.

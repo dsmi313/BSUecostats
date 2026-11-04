@@ -71,7 +71,9 @@ N <- sum(z[])
 }
 ")
 
-ni <- 2500; nt <- 2; nb <- 500; nc <- 3
+# The book runs 2,500 iterations. Four times longer passes the diagnostic
+# screen more reliably and still takes seconds.
+ni <- 10000; nt <- 4; nb <- 2000; nc <- 3
 
 # The same M0 fit is reused below with other augmented data sets.
 fit.M0 <- function(yaug) {

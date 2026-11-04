@@ -28,6 +28,14 @@ Expanded passage doubles: the median goes from 3,565 to 7,131 and the interval f
 
 The +1 correction no longer lands near truth: it averages 3,134, 22% low. The formula N(1 − (1 − p)^(M + 1)) predicts 3,154, so the bias is expected. The bias factor is (1 − p)^(M + 1). The probability of zero recaptures among the M actual releases is (1 − p)^M; 21.2% of these repeats have zero recaptures. The correction cannot replace missing information; increasing the marked sample helps.
 
+## 02a Closed-Population Models
+
+In the default run, M0 with 150 augmented rows gives N 100 (95% CrI 92–111) against truth 100, with 88 animals caught. With only 5 augmented rows (M = 93), the posterior is 90–93 and 48% of draws sit at the ceiling. That fit fails the diagnostic screen only because N's tail ESS can't be computed when draws pile up at one value. On heterogeneous data (86 of 100 caught), M0 gives 89 (86–93), missing the truth; Mh gives 104 (90–145).
+
+### 1. Individual SD of 2
+
+M0 falls further: 79 (78–82), with 78 of 100 caught. Mh gives 110 (86–192). Its interval still contains the truth but is about twice as wide as with SD 1. When some animals are rarely caught, the data say little about how many were never caught.
+
 ## 03 Bernoulli Logit
 
 ### 1. Fifty fish
