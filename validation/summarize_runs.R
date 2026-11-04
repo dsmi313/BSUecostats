@@ -31,7 +31,7 @@ for (case in names(paths)) {
     recovery[[case]] <- data.frame(case = case, attempted = v$n.reps, passed = v$n.kept, t, row.names = NULL)
     if (nrow(v$failed.diagnostics)) failed[[case]] <- data.frame(case = case, v$failed.diagnostics)
   }
-  if (endsWith(case, '_repeats') && !is.null(v$passed)) {
+  if (grepl('_repeats', case, fixed = TRUE) && !is.null(v$passed)) {
     pass <- v$passed
     if (is.matrix(pass)) {
       for (i in seq_len(ncol(pass))) repeats[[paste(case, i)]] <- data.frame(case = case,

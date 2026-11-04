@@ -1,6 +1,6 @@
 # Answers to the Try This Exercises
 
-Try each exercise before reading its answer. Results were checked on 4 November 2026 with R 4.3.3, JAGS 4.3.2, jagsUI 1.6.3, and posterior 1.5.0. The default lessons, every exercise, and the optional repeated studies were executed in isolated folders. Numerical JAGS results can vary across software versions. Unless labeled optional, the numbers use `run.repeats <- FALSE`. Enabling repeated studies consumes random draws, so examples later in the same script may use different simulated data.
+Try each exercise before reading its answer. Results were checked on 4 November 2026 with R 4.3.3, JAGS 4.3.2, jagsUI 1.6.3, and posterior 1.5.0 (posterior 1.7.0 for the two longer checks run afterward, `04_small_long` and `06_repeats_long`). The default lessons, every exercise, and the optional repeated studies were executed in isolated folders. Numerical JAGS results can vary across software versions. Unless labeled optional, the numbers use `run.repeats <- FALSE`. Enabling repeated studies consumes random draws, so examples later in the same script may use different simulated data.
 
 Diagnostics use rank-normalized split Rhat ≤ 1.01 and bulk/tail ESS ≥ 400, with finite median Monte Carlo error. Passing this screen does not establish identifiability, lack of bias, or adequate model fit. Failed repeated fits remain in the failure counts; performance summaries describe successful fits. See [validation results](validation/results/) and the [rerun instructions](validation/README.md).
 
@@ -46,7 +46,7 @@ The original 60,000-iteration runs warn about insufficient bulk ESS in both mode
 
 ### 2. Ten marked fish per trial
 
-Efficiency gets less precise (average 95% width 0.18 vs 0.13), and so does passage: the season-total interval widens from 5,190–7,145 to 4,746–7,289. Model 1 doesn't change, because it never uses the trials. Model 2 fails diagnostics on 69 quantities (lowest tail effective sample size 91), so it needs longer chains before its results can be trusted.
+With the script's 60,000 iterations, the model using trials fails diagnostics on 69 quantities (lowest tail ESS 91), so its numbers can't be trusted. The longer check uses `ni <- 480000; nb <- 240000; nt <- 30; nc <- 3`; both fits then pass (largest Rhat 1.002; smallest bulk and tail ESS 1,323 and 1,356). Efficiency gets less precise: its average daily 95% interval width is 0.18, versus 0.13 with 30 marked fish. Passage follows: the season total is 5,943 (95% CrI 4,764–7,450) against truth 6,284, an interval about 37% wider than the default 5,190–7,145. The counts-only model doesn't change (1,235; 1,150–1,332), because it never uses the trials and still estimates N × p, not N. Fewer marked fish cost precision, and the sampler needs far longer chains to explore the less constrained daily efficiency.
 
 ## 05 Six-Cell Multistate Model
 
@@ -97,7 +97,7 @@ All 20 paired seasons pass after the allowed retries. Within these seasons:
 
 Sharing helps most in the thinnest weeks in this simulation. Weeks within a season are related, and only 20 seasons were simulated; do not treat every week as an independent replicate when quantifying Monte Carlo uncertainty.
 
-The additional rising-detection predictive-check fit *after* the optional loop fails Rhat for p (1.013). That is a different fit from the 20 paired comparisons and the validated default predictive check. Its printed Bayesian p-value should not be interpreted before longer sampling. The warning is retained in the validation records.
+The additional rising-detection predictive-check fit *after* the optional loop fails Rhat for p (1.013) at the script's 10,000 iterations. That is a different fit from the 20 paired comparisons and the default predictive check. Rerunning with 40,000 iterations and 20,000 burn-in for the two predictive-check fits only (validation case `06_repeats_long`) reproduces the same 20 seasons and table above, and all four direct fits then pass (largest Rhat 1.007). The matching season gives Bayesian p 0.445 (0.456 from the shorter default fit to the same data; the difference is Monte Carlo variation). The rising-detection season gives 0.000: its observed discrepancy (95% CrI 73–83) sits well above the simulated discrepancy (38–57), correctly flagging the mismatch. The original warning is retained in the validation records.
 
 ## 07 Day and Night
 
