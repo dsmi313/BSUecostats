@@ -1,6 +1,6 @@
 # Answers to the Try This Exercises
 
-Try each exercise before reading its answer. Results were checked on 4 November 2026 with R 4.3.3, JAGS 4.3.2, jagsUI 1.6.3, and posterior 1.5.0 (posterior 1.7.0 for the two longer checks run afterward, `04_small_long` and `06_repeats_long`). The default lessons, every exercise, and the optional repeated studies were executed in isolated folders. Numerical JAGS results can vary across software versions. Unless labeled optional, the numbers use `run.repeats <- FALSE`. Enabling repeated studies consumes random draws, so examples later in the same script may use different simulated data.
+Try each exercise before reading its answer. Results were checked on 4 November 2026 with R 4.3.3, JAGS 4.3.2, jagsUI 1.6.3, and posterior 1.5.0 (posterior 1.7.0 for checks run afterward: `04_small_long`, `06_repeats_long`, and lessons 02a, 04a, 04b, and 04c). The default lessons, every exercise, and the optional repeated studies were executed in isolated folders. Numerical JAGS results can vary across software versions. Unless labeled optional, the numbers use `run.repeats <- FALSE`. Enabling repeated studies consumes random draws, so examples later in the same script may use different simulated data.
 
 Diagnostics use rank-normalized split Rhat ≤ 1.01 and bulk/tail ESS ≥ 400, with finite median Monte Carlo error. Passing this screen does not establish identifiability, lack of bias, or adequate model fit. Failed repeated fits remain in the failure counts; performance summaries describe successful fits. See [validation results](validation/results/) and the [rerun instructions](validation/README.md).
 
@@ -28,6 +28,22 @@ Expanded passage doubles: the median goes from 3,565 to 7,131 and the interval f
 
 The +1 correction no longer lands near truth: it averages 3,134, 22% low. The formula N(1 − (1 − p)^(M + 1)) predicts 3,154, so the bias is expected. The bias factor is (1 − p)^(M + 1). The probability of zero recaptures among the M actual releases is (1 − p)^M; 21.2% of these repeats have zero recaptures. The correction cannot replace missing information; increasing the marked sample helps.
 
+## 02a Closed-Population Models
+
+In the default run, M0 with 150 augmented rows gives N 100 (95% CrI 92–111) against truth 100, with 88 animals caught. With only 5 augmented rows (M = 93), the posterior is 90–93 and 48% of draws sit at the ceiling. That fit fails the diagnostic screen only because N's tail ESS can't be computed when draws pile up at one value. On heterogeneous data (86 of 100 caught), M0 gives 89 (86–93), missing the truth; Mh gives 104 (90–145).
+
+### 1. Individual SD of 2
+
+M0 falls further: 79 (78–82), with 78 of 100 caught. Mh gives 110 (86–192). Its interval still contains the truth but is about twice as wide as with SD 1. When some animals are rarely caught, the data say little about how many were never caught.
+
+### 2. Two occasions
+
+The posterior median is 98 (95% CrI 74–159) against Lincoln-Petersen's 97 and truth 100, with 62 animals caught. With two occasions, Mt is Lincoln-Petersen. The interval is about 1.7 times as wide as with three occasions (91–140), because only one recapture sample informs p.
+
+### 3. No trap response
+
+With c = p = 0.3, the trap-response interval is −0.09 to 0.06 (estimate −0.01) and includes zero, as it should. N is 199 (184–222) against truth 200. In the default run the interval is 0 to 0.15, with its lower end at zero: 167 animals and five occasions barely detect a true response of 0.1.
+
 ## 03 Bernoulli Logit
 
 ### 1. Fifty fish
@@ -47,6 +63,46 @@ The original 60,000-iteration runs warn about insufficient bulk ESS in both mode
 ### 2. Ten marked fish per trial
 
 With the script's 60,000 iterations, the model using trials fails diagnostics on 69 quantities (lowest tail ESS 91), so its numbers can't be trusted. The longer check uses `ni <- 480000; nb <- 240000; nt <- 30; nc <- 3`; both fits then pass (largest Rhat 1.002; smallest bulk and tail ESS 1,323 and 1,356). Efficiency gets less precise: its average daily 95% interval width is 0.18, versus 0.13 with 30 marked fish. Passage follows: the season total is 5,943 (95% CrI 4,764–7,450) against truth 6,284, an interval about 37% wider than the default 5,190–7,145. The counts-only model doesn't change (1,235; 1,150–1,332), because it never uses the trials and still estimates N × p, not N. Fewer marked fish cost precision, and the sampler needs far longer chains to explore the less constrained daily efficiency.
+
+## 04a CJS Survival
+
+In the default run, survival is 0.652 (95% CrI 0.577–0.731) against truth 0.65, and recapture 0.426 (0.335–0.519) against 0.4. The last survival's interval is 0.14–0.96, nearly the flat prior's. The fit check gives p = 0.486 for the time-varying model and 0.005 for the constant model.
+
+### 1. Ten marked per occasion
+
+The intervals roughly double in width: survival 0.532–0.813 and recapture 0.354–0.723.
+
+### 2. Constant recapture probability
+
+The last survival is now identified, at 0.18–0.56, but that interval misses the truth, 0.7. It assumes p is the same every year, and here it isn't. The fit check flags the constrained model (p = 0.012). A constraint buys identifiability only if it's true.
+
+### 3. Seed 7
+
+The check no longer catches the constant model (p = 0.384). With 30 animals marked per year, the check has little power. A passing check means this check couldn't detect misfit, not that the model is right. With seed 7, section 1's recapture interval (0.415–0.607) also misses its truth, 0.4, as about 1 in 20 intervals should.
+
+## 04b Jolly-Seber
+
+In the default run, 282 of 400 animals are caught. The superpopulation is 403 (95% CrI 366–451) against truth 400, survival 0.723 (0.669–0.777) against 0.7, and capture 0.458 (0.387–0.528) against 0.5. Every occasion's N interval contains the truth. With `set.seed(10)` instead, a direct run that also passed diagnostics gave 455 (411–517), missing the truth, a reminder that 95% intervals miss sometimes.
+
+### 1. Capture probability 0.2
+
+Only 166 animals are caught. The 300 augmented rows are no longer enough: 12% of Nsuper draws sit at the ceiling of 466, so the upper end of its interval (395–466) is truncated, and the fit fails the diagnostic screen. Intervals for N at each occasion are three to four times wider and centered too high (for example 225, 146–340, against truth 146 at occasion 6). Low capture probability needs more augmentation and longer chains, and it still leaves N poorly determined.
+
+### 2. Thirty augmented rows
+
+With only 312 rows for 282 animals caught, 55% of Nsuper draws sit at the ceiling, and its interval (308–312) excludes the truth, 400. The fit fails the diagnostic screen, but the ceiling share is the clearer warning. Capture probability is biased high (0.591, 0.529–0.653, against 0.5), because the model must explain the data with too few uncaught animals. Survival is barely affected (0.720).
+
+## 04c Mark-Recovery
+
+In the default run, 700 animals are marked and 598 never recovered. Survival is 0.831 (95% CrI 0.772–0.888) against truth 0.8, and recovery 0.220 (0.176–0.285) against 0.2. For the red kites, juvenile survival is 0.433 (0.249–0.791) with the Beta(4.2, 2.8) prior and 0.377 (0.214–0.775) with the flat prior, close to the book's results. Adult survival is 0.84 (0.78–0.90) under both. The informative prior barely narrows juvenile survival, as the book also finds.
+
+### 1. Ten marked per occasion
+
+Survival widens from 0.772–0.888 to 0.686–0.956, about 2.3 times wider, and recovery from 0.176–0.285 to 0.128–0.520, about 3.6 times. Only 19 of 140 animals are recovered.
+
+### 2. A tighter prior, Beta(42, 28)
+
+Juvenile survival becomes 0.572 (0.454–0.683), close to the prior's mean of 0.6, compared with 0.377 under the flat prior. The prior now dominates: the data are too weak to pull it away. Adult survival doesn't change (0.84). A prior this tight needs strong outside evidence to justify it.
 
 ## 05 Six-Cell Multistate Model
 

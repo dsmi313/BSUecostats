@@ -1,6 +1,6 @@
 # Does the model recover the truth? A small simulation study
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: about 30 to 45 seconds. Times vary up to 2x between computers.)
 #
 # "Truth is known, so we know what to expect from the analysis"
 # (Kery and Schaub 2012, Section 1.5). Simulate data from known values, fit

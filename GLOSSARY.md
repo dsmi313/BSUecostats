@@ -56,6 +56,10 @@ fish, recovery is conditional on return to river and excludes transported fish.
 
 ## Statistics terms
 
+**Apparent survival (phi).** The probability an animal survives and stays in the study area between two occasions. Capture-recapture can't tell death from permanent emigration.
+
+**Bayesian p-value.** From a posterior predictive check: the share of draws where data simulated from the model are more discrepant than the real data. Values near 0 or 1 signal misfit; values in between mean the check couldn't detect any.
+
 **Bernoulli trial.** One yes-or-no outcome with probability p, like one fish guided or not.
 
 **Bias.** How far an estimate lands from the truth, on average over many repeats.
@@ -66,7 +70,11 @@ fish, recovery is conditional on return to river and excludes transported fish.
 
 **Burn-in.** The first MCMC draws, thrown away while the chains move away from their starting points.
 
+**Capture history.** One row per marked animal, one column per occasion: 1 if caught, 0 if not. 0 1 1 means missed on occasion 1, caught on 2 and 3.
+
 **Chain.** One run of the MCMC sampler. Running several chains from different starts and checking they agree is how you judge convergence. See also Rhat and Trace plot.
+
+**CJS (Cormack-Jolly-Seber) model.** Estimates apparent survival and recapture probability from capture histories, conditioning on each animal's first capture. It doesn't estimate population size.
 
 **Complete pooling vs partial pooling.** Complete pooling forces groups to share one value. Partial pooling (a hierarchical model) lets each group have its own value but pulls it toward the group average, more strongly for groups with less data.
 
@@ -80,6 +88,8 @@ fish, recovery is conditional on return to river and excludes transported fish.
 
 **Credible interval.** A Bayesian interval: given the model and the data, the parameter is inside it with the stated probability. See also Posterior and Coverage.
 
+**Data augmentation.** Adding all-zero rows (animals never caught) to capture histories so the model can estimate how many of them are real. The number of rows sets a ceiling on N.
+
 **GLM (generalized linear model).** A regression with an outcome distribution,
 a linear predictor, and a link function. Familiar GLMs can be components of
 larger Bayesian models, connected through shared parameters and latent processes.
@@ -91,6 +101,8 @@ The detection-history likelihood here connects guidance, detection, and recovery
 
 **Jensen's inequality.** For a curved function, the average of the function isn't the function of the average. Here: the average of 1 / p is larger than 1 / (average p). See also Convex.
 
+**Jolly-Seber model.** An open-population capture-recapture model: animals enter, survive, and are caught or not. It estimates population size at each occasion, entries, and the superpopulation.
+
 **Latent state.** A true quantity that isn't observed directly, like daily passage or a fish's route.
 
 **Likelihood.** How probable the observed data are for each possible parameter value.
@@ -98,6 +110,8 @@ The detection-history likelihood here connects guidance, detection, and recovery
 **Lincoln-Petersen.** A capture-recapture estimator using the overlap between marked and subsequently sampled animals: the basic form is M*C/R. Corrections depend on the sampling design. The talk's Bailey modification is M*(C+1)/(R+1).
 
 **Logit.** log(p / (1 − p)). It maps probabilities (0 to 1) onto the whole number line, so effects can be added without pushing a probability past 0 or 1.
+
+**m-array.** A summary of capture histories: for each release occasion, how many animals were next recaptured at each later occasion, and how many were never seen again.
 
 **MCMC (Markov chain Monte Carlo).** The simulation method JAGS uses to draw samples from the posterior when there is no exact formula.
 
@@ -107,9 +121,13 @@ The detection-history likelihood here connects guidance, detection, and recovery
 
 **Posterior.** What you believe about a parameter after seeing the data: prior times likelihood, rescaled.
 
+**Posterior predictive check.** Comparing the real data with data simulated from the fitted model. See also Bayesian p-value.
+
 **Precision.** 1 / variance. JAGS's dnorm uses precision, not standard deviation: dnorm(0, 0.1) has SD about 3.2.
 
 **Prior.** What you believe about a parameter before seeing the data.
+
+**Recovery probability (mark-recovery).** The chance a marked animal that died is found and reported. Different from recovery in the dam lessons, which means surviving to Little Goose and being detected there.
 
 **Rhat.** Compares variation between chains to variation within chains. Near 1 supports agreement. These lessons also check rank-normalized split Rhat <= 1.01, bulk/tail effective sample sizes >= 400, and trace plots. No single diagnostic proves convergence.
 
@@ -120,6 +138,8 @@ The detection-history likelihood here connects guidance, detection, and recovery
 **Simpson's paradox.** An aggregate comparison reverses the comparisons within its component groups because their proportions differ. In the talk, day and night GE both fall while pooled GE rises as night passage becomes more common.
 
 **State-space model.** A model with two parts: a process model for the true state over time, and an observation model for what you actually measure.
+
+**Superpopulation.** Every animal ever present during a Jolly-Seber study, including those that entered and died between occasions.
 
 **Thinning.** Keeping only every k-th MCMC draw to save memory.
 

@@ -1,6 +1,7 @@
 # Hierarchical guidance: borrowing strength across weeks and rear types
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: about 15 to 30 seconds; a few minutes more with run.repeats <-
+# TRUE. Times vary up to 2x between computers.)
 #
 # What this script should leave you with: a week with 10 wild fish can't
 # stand on its own, but it doesn't have to. If wild and hatchery respond to

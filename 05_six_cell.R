@@ -1,6 +1,6 @@
 # The six-cell multistate model at Lower Granite Dam
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: about 10 to 35 seconds. Times vary up to 2x between computers.)
 #
 # What this script should leave you with: you never see a fish's route, only
 # where it was detected, and each detection site exists to identify one

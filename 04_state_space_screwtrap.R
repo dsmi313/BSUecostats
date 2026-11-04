@@ -1,6 +1,6 @@
 # State-space model for daily screw trap abundance
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: about 2 to 3 minutes. Times vary up to 2x between computers.)
 #
 # Builds on Kery and Schaub (2012) Bayesian Population Analysis, Chapter 5.
 # The process model is the log-scale model from BPA 5.4 (house martins).
