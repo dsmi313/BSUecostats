@@ -1,4 +1,6 @@
 # Setup: run this once before the other scripts
+# (Run time: a few seconds if the packages are installed. Times vary up to 2x
+# between computers.)
 #
 # Installs any missing R packages, checks that JAGS is installed and that R
 # can find it, and prints the versions you're running. If anything fails,

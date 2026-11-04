@@ -1,6 +1,6 @@
 # Survival, recruitment, and population size: the Jolly-Seber (JS) model
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: about 3 to 8 minutes. Times vary up to 2x between computers.)
 #
 # Straight from Kéry and Schaub (2012), chapter 10. The simulation function
 # and JAGS model are the book's, from the authors' JAGS translation

@@ -1,6 +1,7 @@
 # Closed-population size from capture histories: M0, Mt, Mb, and Mh
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: about 3 to 4 minutes, mostly the Mh fit in section 5. Times vary
+# up to 2x between computers.)
 #
 # Straight from Kéry and Schaub (2012), chapter 6. The simulation functions
 # and JAGS models are the book's, from the authors' JAGS translation

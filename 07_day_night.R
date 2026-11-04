@@ -2,7 +2,8 @@
 # For the talk's fast, eight-week closed-form figure (no JAGS), run
 # 07a_day_night_closed_form.R. This lesson fits the Bayesian teaching models.
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: under 10 seconds; several minutes more with run.repeats <- TRUE.
+# Times vary up to 2x between computers.)
 #
 # What this script should leave you with: a pooled rate is a blend, and the
 # blend depends on the mix. Wild and hatchery can behave identically by day

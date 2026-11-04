@@ -1,4 +1,5 @@
 # Borrowing hatchery GE: pooled vs split by day and night
+# (Run time: about 5 seconds. Times vary up to 2x between computers.)
 # Run from the repository root: Rscript 07a_day_night_closed_form.R
 # Plain R plus ggplot2 >= 3.4.0; no JAGS needed for this example.
 #

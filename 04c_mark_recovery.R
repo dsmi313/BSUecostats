@@ -1,4 +1,5 @@
 # Survival from dead recoveries: mark-recovery models and Swiss red kites
+# (Run time: under 10 seconds. Times vary up to 2x between computers.)
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
 #
 # Straight from Kéry and Schaub (2012), chapter 8. The simulation function,

@@ -1,6 +1,6 @@
 # Your first Bayesian model: how efficient is the trap?
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (The model fit in section 3 takes a few seconds to run.)
+# (Run time: under 5 seconds. Times vary up to 2x between computers.)
 #
 # What this script should leave you with: a Bayesian analysis is three
 # pieces. A prior says what you believed before the data. A likelihood says

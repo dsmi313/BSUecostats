@@ -1,4 +1,5 @@
 # From GE to abundance: whose uncertainty does the bootstrap carry?
+# (Run time: about 10 seconds. Times vary up to 2x between computers.)
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
 #
 # Lower Granite abundance expands the trap catch by the chance a passing fish

@@ -1,6 +1,6 @@
 # Survival from recaptures: the Cormack-Jolly-Seber (CJS) model
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: about 30 to 60 seconds. Times vary up to 2x between computers.)
 #
 # Straight from Kéry and Schaub (2012), chapter 7. The simulation functions
 # and JAGS models are the book's, from the authors' JAGS translation

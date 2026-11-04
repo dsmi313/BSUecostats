@@ -1,6 +1,6 @@
 # A logit GLM in JAGS: does spill change guidance?
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
-# (Model fits can take a few minutes to run; R will look busy while JAGS samples.)
+# (Run time: under 5 seconds. Times vary up to 2x between computers.)
 #
 # Each PIT-tagged fish arriving at the dam is either guided into the bypass
 # (1) or not (0). That is a Bernoulli trial (BPA 3.5). A link function lets

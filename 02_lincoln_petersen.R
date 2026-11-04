@@ -1,4 +1,5 @@
 # Trap efficiency at a screw trap
+# (Run time: under 5 seconds. Times vary up to 2x between computers.)
 # (Run 00_setup.R once first: it installs packages and checks JAGS.)
 #
 # One stratum at a rotary screw trap. Some passing fish are caught. Separately,
