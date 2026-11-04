@@ -75,6 +75,15 @@ results <- data.frame()
 rhat.all <- numeric()
 passed <- logical(n.reps)
 overlap.counts <- matrix(0L, n.reps, 3, dimnames = list(NULL, c("c2", "c4", "c5")))
+counts.all <- matrix(0L, n.reps, 6, dimnames = list(NULL, paste0("c", 1:6)))
+truth.all <- matrix(NA_real_, n.reps, length(pars) + 1L,
+                   dimnames = list(NULL, paste0("truth.", c(pars, "delta"))))
+retried <- logical(n.reps)
+diagnostics.all <- vector("list", n.reps)
+failed.fits <- list()
+failed.diagnostics <- data.frame(rep = integer(), variable = character(), rhat = numeric(),
+                                  ess_bulk = numeric(), ess_tail = numeric(), mcse_median = numeric(),
+                                  reason = character(), stringsAsFactors = FALSE)
 
 for (i in 1:n.reps) {
   truth <- c(psi = runif(1, 0.03, 0.30), p = runif(1, 0.25, 0.60), trans = runif(1, 0.3, 0.8),
@@ -85,21 +94,35 @@ for (i in 1:n.reps) {
                                 (1 - psi) * (1 - p) * (1 - phi_S)))
   n <- rmultinom(1, n.tagged, pr)[1:6, 1]
   overlap.counts[i, ] <- n[c(2, 4, 5)]
+  counts.all[i, ] <- n
+  truth.all[i, ] <- truth[c(pars, "delta")]
   # Fitting: this can take a few minutes.
   fit <- safe_jags(list(n = n, N_seen = sum(n)), NULL, c(pars, "delta"), "six_cell.jags",
               n.chains = 3, n.iter = 4000, n.burnin = 1000, n.thin = 3, parallel = FALSE, verbose = FALSE)
   # If a fit errors or fails the Rhat/ESS checks, refit once with four times as many iterations
   # (same chains, same thinning, so four times the draws). Dropping hard data
   # sets without a retry would make the results look better than they are.
-  if (!fit_ok(fit))
+  if (!fit_ok(fit)) {
+    retried[i] <- TRUE
     fit <- safe_jags(list(n = n, N_seen = sum(n)), NULL, c(pars, "delta"), "six_cell.jags",
                 n.chains = 3, n.iter = 16000, n.burnin = 4000, n.thin = 3, parallel = FALSE, verbose = FALSE)
+  }
   # Save convergence for every fit. Fits still failing after the retry are
   # left out and counted; the summary describes fits that passed diagnostics.
   rhat <- fit_rhat(fit)
   rhat.all <- c(rhat.all, rhat)
   passed[i] <- fit_ok(fit)
-  if (!passed[i]) { cat("x", ""); next }
+  # Single brackets preserve the replicate index even when diagnostics are NULL.
+  diagnostics.all[i] <- list(fit_diagnostics(fit))
+  if (!passed[i]) {
+    issues <- diagnostic_failures(diagnostics.all[[i]])
+    failed.diagnostics <- rbind(failed.diagnostics, data.frame(rep = i, issues, row.names = NULL))
+    failed.fits[[as.character(i)]] <- list(rep = i, truth = truth, counts = n,
+                                          N_seen = sum(n), fit = fit,
+                                          diagnostics = diagnostics.all[[i]])
+    cat("x", "")
+    next
+  }
   for (k in pars) {
     d <- fit$sims.list[[k]]
     results <- rbind(results, data.frame(rep = i, par = k, truth = truth[k], est = mean(d),
@@ -115,6 +138,24 @@ cat("Data sets with zero counts in downstream cells (all simulated data sets):\n
 print(colSums(overlap.counts == 0))
 cat("Fits failing diagnostics after a retry:", n.reps - n.kept, "of", n.reps,
     "(results below are among the", n.kept, "fits that passed)\n")
+cat("Failure rate:", round(100 * mean(!passed), 1), "%\n")
+if (nrow(failed.diagnostics)) {
+  cat("Failed-fit parameters and reasons (after the longer retry):\n")
+  print(failed.diagnostics, row.names = FALSE)
+}
+# Keep the evidence even if every fit fails and the coverage summary stops.
+dir.create("diagnostics", showWarnings = FALSE)
+replicate.summary <- data.frame(rep = seq_len(n.reps), passed = passed, retried = retried,
+                                max.rhat = rhat.all, counts.all, truth.all)
+write.csv(replicate.summary, "diagnostics/09_replicate_status.csv", row.names = FALSE)
+write.csv(failed.diagnostics, "diagnostics/09_failed_diagnostics.csv", row.names = FALSE)
+saveRDS(list(failed.fits = failed.fits, diagnostics.all = diagnostics.all,
+             replicate.summary = replicate.summary, model = readLines("six_cell.jags"),
+             n.tagged = n.tagged, parameters = c(pars, "delta"),
+             settings = list(n.chains = 3, initial.iter = 4000, initial.burnin = 1000,
+                             retry.iter = 16000, retry.burnin = 4000, n.thin = 3),
+             session = sessionInfo()), "diagnostics/09_fit_diagnostics.rds")
+cat("Saved diagnostics and failed-fit data/objects under diagnostics/.\n")
 if (!n.kept) stop("No fits passed diagnostics; inspect fit failures before summarizing.")
 results$covered <- results$lo <= results$truth & results$truth <= results$hi
 results$error <- results$est - results$truth
@@ -156,6 +197,9 @@ print(p1)
 #   from chance alone.
 # - Low recovery makes overlap cells sparse. Examine which parameters become
 #   prior-sensitive; no particular bias direction or coverage is guaranteed.
+# - Report diagnostic failure rate alongside conditional bias/coverage. Inspect
+#   failed.diagnostics and readRDS("diagnostics/09_fit_diagnostics.rds") rather
+#   than silently discarding the hard fits or loosening diagnostic thresholds.
 
 # Where BPA teaches this ----
 # - 1.5 in the book: "Truth is known, so we know what to expect from the

@@ -48,6 +48,25 @@ fit_ok <- function(fit) {
     all(d$rhat <= 1.01 & d$ess_bulk >= 400 & d$ess_tail >= 400)
 }
 
+# Explain the same screen used by fit_ok(), retaining the parameter names.
+# Accept a precomputed diagnostic table so simulation loops can save it once.
+diagnostic_failures <- function(diagnostics) {
+  if (is.null(diagnostics) || !nrow(diagnostics)) {
+    return(data.frame(variable = NA_character_, rhat = NA_real_, ess_bulk = NA_real_,
+                      ess_tail = NA_real_, mcse_median = NA_real_,
+                      reason = "diagnostics unavailable", stringsAsFactors = FALSE))
+  }
+  d <- as.data.frame(diagnostics)
+  d$reason <- vapply(seq_len(nrow(d)), function(i) {
+    paste(c(
+      if (!is.finite(d$rhat[i])) "Rhat unavailable" else if (d$rhat[i] > 1.01) "Rhat > 1.01",
+      if (!is.finite(d$ess_bulk[i])) "bulk ESS unavailable" else if (d$ess_bulk[i] < 400) "bulk ESS < 400",
+      if (!is.finite(d$ess_tail[i])) "tail ESS unavailable" else if (d$ess_tail[i] < 400) "tail ESS < 400",
+      if (!is.finite(d$mcse_median[i])) "median MCSE unavailable"), collapse = "; ")
+  }, character(1))
+  d[nzchar(d$reason), c("variable", "rhat", "ess_bulk", "ess_tail", "mcse_median", "reason"), drop = FALSE]
+}
+
 fit_rhat <- function(fit) {
   d <- fit_diagnostics(fit)
   if (is.null(d) || !nrow(d) || any(!is.finite(d$rhat))) return(Inf)

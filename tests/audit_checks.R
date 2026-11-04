@@ -8,6 +8,16 @@ set.seed(20261029)
 good <- list(samples = lapply(1:4, function(i)
   cbind(theta = rnorm(2000), wild_ge = rbeta(2000, 4, 30))))
 stopifnot(fit_ok(good), "inverse_ge" %in% fit_diagnostics(good)$variable)
+stopifnot(nrow(diagnostic_failures(fit_diagnostics(good))) == 0L,
+          diagnostic_failures(NULL)$reason == "diagnostics unavailable")
+# Report every failed criterion with its parameter, including ESS failures
+# that a maximum-Rhat summary alone would miss.
+d <- data.frame(variable = c("high_rhat", "low_bulk", "low_tail", "missing_mcse"),
+                rhat = c(1.02, 1, 1, 1), ess_bulk = c(1000, 399, 1000, 1000),
+                ess_tail = c(1000, 1000, 399, 1000), mcse_median = c(.01, .01, .01, NA))
+issues <- diagnostic_failures(d)
+stopifnot(identical(issues$variable, d$variable),
+          identical(issues$reason, c("Rhat > 1.01", "bulk ESS < 400", "tail ESS < 400", "median MCSE unavailable")))
 stopifnot(!fit_ok(NULL), !fit_ok(list(samples = list())))
 bad <- good
 bad$samples[[1]][1, 1] <- NA_real_

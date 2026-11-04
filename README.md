@@ -12,13 +12,13 @@ New to Bayesian statistics? Start with [01_first_bayesian_model.R](01_first_baye
 
 **These are teaching examples, not the models IDFG uses for its estimates.** They are simplified so each idea stands on its own. The concepts carry over to the production models. Written with help from Claude.
 
-**Validation status:** the dam lessons have been revised to use low downstream
-recovery throughout. Focused checks cover syntax, diagnostics, arithmetic, and
-simulation inputs. Full lesson fits and optional repeated studies need to be
-rerun after this revision; the revised JAGS results are not yet validated.
-`ANSWERS.md` removes numerical claims that depended on the old high-recovery
-scenario. The separate `07a` slide simulation already uses low recovery and
-retains its previously checked figure and summaries.
+**Validation status (4 November 2026):** the low-recovery default lessons,
+every exercise, and optional repeated studies have been executed. The
+[answer key](ANSWERS.md) reports checked results and diagnostic caveats;
+[validation records](validation/results/) include sampling diagnostics and
+failure counts. Difficult exercises have separate longer-chain checks.
+Repeated-study performance is conditional on successful fits, with failures
+reported explicitly. The default `07a` run reproduces its slide figure.
 
 ## Requirements
 
@@ -59,6 +59,16 @@ Run [00_setup.R](00_setup.R) first. It installs any missing packages, checks tha
 The numbered R scripts and `helpers.R` stay together so they can be run directly from this folder. The helper checks rank-normalized split Rhat (<= 1.01), bulk/tail effective sample sizes (>= 400), and missing diagnostics. These are screening thresholds, not proof of convergence. Inspect trace plots and Monte Carlo error too.
 
 Simulation fits that error or fail diagnostics are retried once and counted if they still fail. Comparisons remain paired. Lesson 07 compares posterior-median abundance expansions because the wild-only inverse-GE mean can be infinite when no guided fish are observed.
+
+Lesson 09 also prints the diagnostic failure rate and the parameter-level
+Rhat/ESS reasons for each failed fit. It saves all replicate statuses, counts,
+and true values in `diagnostics/09_replicate_status.csv`, failed parameter
+diagnostics in `diagnostics/09_failed_diagnostics.csv`, and full failed-fit
+objects, input counts, model text, and all replicate diagnostics in
+`diagnostics/09_fit_diagnostics.rds`. These run-specific files are ignored by
+Git. Inspect failures alongside coverage among successful fits; passing a
+sampling check does not establish parameter identifiability. Lesson 05 checks
+the facility-tagging and no-GOJ fits explicitly as well.
 
 Lessons 01 and 03 use the same modern diagnostic helper as the later JAGS
 lessons. Traditional jagsUI Rhat is supplemented by rank-normalized split
@@ -122,7 +132,7 @@ the fitted prior excludes positive values.
 | [08_bootstrap.R](08_bootstrap.R) | The slide's one-day fixed-GE bootstrap, then weekly fixed GE versus GE draws. Coverage of each over 300 simulated weeks. Plain R, no JAGS. | Where Bootstrap Intervals Come From; Jensen's inequality |
 | [09_recover_truth.R](09_recover_truth.R) | A small simulation study: bias and 95% interval coverage over 50 simulated data sets. | Does it recover GE? |
 
-Every lesson script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Plain-R examples are quick; JAGS fits and repeated studies can take minutes or longer. Low-recovery runtimes and diagnostics need rechecking, especially in `05`, `06`, `07`, and `09`. In `06` and `07`, single-example and model-check/prior-sensitivity sections run by default. Repeated simulation studies are off: set `run.repeats <- TRUE` at the top of either script to add them.
+Every lesson script runs top to bottom and prints its results and a plot. Scripts that use JAGS write their models to `.jags` files in the working directory. Plain-R examples are quick; JAGS fits and repeated studies can take minutes or longer. The default lessons, exercises, and optional repeated studies were executed on 4 November 2026; see [validation results](validation/results/) for versions and diagnostic outcomes. Some sparse-data exercises need longer sampling, and repeated studies retain explicit failure counts. In `06` and `07`, single-example and model-check/prior-sensitivity sections run by default. Repeated simulation studies are off: set `run.repeats <- TRUE` at the top of either script to add them.
 
 ## Real data to try
 
@@ -214,7 +224,7 @@ Use slide titles because slide numbers change as the deck develops.
 | Talk topic | Companion example and scope |
 |---|---|
 | We Control the Marks | `02`, section 0: Bailey's 9,533 example and sum across strata. The following independent-trial simulation uses a different correction. |
-| Where Bootstrap Intervals Come From | `08`, section 0: 130 caught, sample rate 0.25, GE 0.13, 2,000 replicates, 90% interval. The slide's 3,446–4,554 endpoints are from a particular simulation; without its RNG state, the new run need not match them. Exact binomial endpoints round to 3,446–4,585. |
+| Where Bootstrap Intervals Come From | `08`, section 0: 130 caught, sample rate 0.25, GE 0.13, 2,000 replicates, 90% interval. The seed-7 simulation gives 3,445–4,585; exact binomial endpoints round to 3,446–4,585. Use one of these documented versions on the slide. |
 | Step 2: The Row Method | `05`, section 0: three rows with read probabilities 0.64, 0.61, 0.53 and a combined 0.934012. Row overlaps illustrate estimation under independent, equally readable fish. |
 | Most of the PIT Fish Are Hatchery | `06`, section 1b: an illustrative adjacent-week pooling rule requiring both c4+c5 > 10 and c3+c4 > 10, with a trailing group merged backward. The fitted simulation retains its fixed teaching strata. |
 | Simpson's Paradox | `07`, section 0: the toy reversal from 0.066 to 0.112. |
@@ -223,6 +233,6 @@ Use slide titles because slide numbers change as the deck develops.
 
 The talk's regression includes outflow; `06` uses spill only. The talk's day/night model extends that regression; `07` uses one week without covariates. The talk carries genetic stock-assignment uncertainty; `08` leaves it out along with composition resampling.
 
-Each lesson (`01`–`09`) ends with **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. [ANSWERS.md](ANSWERS.md) provides guidance and labels historical numerical examples. Numerical answers for the revised low-recovery JAGS lessons await fresh runs.
+Each lesson (`01`–`09`) ends with **Try this** exercises just before its lessons summary. Predict the result, change one setting, rerun, and inspect diagnostics before interpreting it. Reset the change before trying the next exercise. [ANSWERS.md](ANSWERS.md) gives verified numerical examples, diagnostic caveats, and conditional simulation summaries. The [validation runner](validation/README.md) reproduces the default lessons, exercises, and optional studies in separate folders.
 
 Lesson `05`, section 3b, walks through the talk's MY2025 wild counts with plain division before introducing the multinomial: naive GE, a row-read correction, then the GOJ overlap correction. These season calculations are kept separate from the simulated JAGS data and from the production hierarchical estimates.

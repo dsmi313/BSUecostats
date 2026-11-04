@@ -233,7 +233,7 @@ params <- c("psi", "p", "trans", "phi_S", "phi_B", "delta", "N_total")
 
 # Fitting: this can take a few minutes.
 fit <- jags(jags.data, inits, params, "six_cell.jags",
-            n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2, parallel = TRUE)
+            n.chains = 3, n.iter = 24000, n.burnin = 8000, n.thin = 2, parallel = TRUE)
 
 # 5. Compare to the truth ----
 print(fit_diagnostics(fit))
@@ -251,7 +251,7 @@ cat("Expanded tagged passage (detection-probability uncertainty only): truth", n
 # Same model, real data: the six season counts from section 3b. The posterior
 # mean of psi should sit near the closed-form 0.05, now with an interval.
 fit.slide <- jags(list(n = as.vector(slide.counts), N_seen = sum(slide.counts)), inits, params,
-                  "six_cell.jags", n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2,
+                  "six_cell.jags", n.chains = 3, n.iter = 24000, n.burnin = 8000, n.thin = 2,
                   parallel = TRUE)
 if (!fit_ok(fit.slide)) warning("fit.slide: diagnostics need attention before interpreting results.")
 slide.est <- t(sapply(c("psi", "p", "trans", "phi_S", "phi_B"), function(k)
@@ -291,7 +291,9 @@ n.mixed <- n
 n.mixed[c("c1", "c2", "c6")] <- n.mixed[c("c1", "c2", "c6")] + facility.fish
 
 fit.mixed <- jags(list(n = as.vector(n.mixed), N_seen = sum(n.mixed)), inits, params, "six_cell.jags",
-                  n.chains = 3, n.iter = 6000, n.burnin = 2000, n.thin = 2, parallel = TRUE)
+                  n.chains = 3, n.iter = 24000, n.burnin = 8000, n.thin = 2, parallel = TRUE)
+print(fit_diagnostics(fit.mixed))
+if (!fit_ok(fit.mixed)) warning("fit.mixed: diagnostics need attention before interpreting results.")
 
 ci <- function(x) round(quantile(x, c(0.025, 0.975)), 3)
 cat("\nGE truth:", psi, "\n")
@@ -305,8 +307,10 @@ cat("Fix: drop fish whose tagging site guarantees a route before fitting.\n")
 # One observed ratio is left:
 #   guided / (guided + GRS) = psi / (psi + (1 - psi) p)
 # One equation, two unknowns: low psi with poor GRS detection fits the same
-# counts as higher psi with good GRS detection. The sampler still runs and
-# Rhat still looks fine. The warning sign: p's posterior spreads over most of
+# counts as higher psi with good GRS detection. The sampler can run and even
+# pass its diagnostics without identifying the parameters. It can also mix
+# slowly along this ridge; assess sampling and identifiability separately.
+# The identification warning sign: p's posterior spreads over most of
 # 0 to 1, and its shape comes from the priors, not the data (here the flat
 # prior on psi tilts it toward high p). Compare posterior to prior (BPA 7.9).
 
@@ -322,7 +326,10 @@ guided ~ dbin(psi / p_seen, N_seen)
 guided <- sum(n[c("c1", "c2", "c6")])
 grs <- sum(n[c("c3", "c4")])
 fit.nogoj <- jags(list(guided = guided, N_seen = guided + grs), NULL, c("psi", "p"), "no_goj.jags",
-                  n.chains = 3, n.iter = 20000, n.burnin = 5000, n.thin = 5, parallel = TRUE)
+                  n.chains = 3, n.iter = 160000, n.burnin = 40000, n.thin = 5, parallel = TRUE)
+print(fit_diagnostics(fit.nogoj))
+if (!fit_ok(fit.nogoj))
+  warning("fit.nogoj: diagnostics need attention. Longer sampling may help mixing, but cannot resolve GE/detection confounding.")
 cat("\nMax Rhat without GOJ:", round(fit_rhat(fit.nogoj), 3), "\n")
 cat("p:   truth", p, "  with GOJ", round(fit$mean$p, 3), ci(fit$sims.list$p),
     "  without GOJ", round(fit.nogoj$mean$p, 3), ci(fit.nogoj$sims.list$p), "\n")
@@ -398,8 +405,8 @@ stopifnot(isTRUE(all.equal(flag.check[1, "GE"], flag.check[2, "GE"])))
 #   decision make GE look much higher than it is, with a tight interval that
 #   misses the truth.
 # - Without a downstream site, only the combination of GE and p is
-#   identified. The sampler still runs and Rhat still looks fine, so check
-#   posteriors against priors and simulate with known truth.
+#   identified. Passing MCMC diagnostics does not resolve that structural
+#   problem. Check sampling, compare posteriors with priors, and simulate.
 
 # Where BPA teaches this ----
 # - 9.2  Multistate model: estimation of movement between two sites (model

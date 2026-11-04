@@ -9,6 +9,12 @@
 # Plots saved while running
 Rplots.pdf
 
+# Run-specific simulation diagnostics (09); generated locally for inspection
+diagnostics/
+
 # OS files
 .DS_Store
 Thumbs.db
+
+# Python validation runner cache
+__pycache__/

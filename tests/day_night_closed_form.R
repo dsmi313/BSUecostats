@@ -44,4 +44,9 @@ wk$NW <- wk$NW * 100
 wk$NH <- wk$NH * 100
 same <- summarize_borrow_simulation(run_borrow_simulation(wk, n.sims = 200))
 stopifnot(same$failed.seasons == 0, all(abs(same$season$median) < .02))
+# Departure exercise changes wild generation and the truth used for errors.
+departure <- run_borrow_simulation(n.sims = 3, wild.ge.multiplier = 0.8)
+stopifnot(identical(departure$wild.ge.multiplier, 0.8),
+          inherits(try(run_borrow_simulation(n.sims = 1, wild.ge.multiplier = 100),
+                       silent = TRUE), "try-error"))
 cat("Closed-form day/night checks passed.\n")

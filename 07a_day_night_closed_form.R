@@ -8,6 +8,7 @@
 # assign both rears identical day GE, night GE, GRS detection, and nonguided
 # GOJ recovery; only their night shares differ. Within each week, detection
 # and recovery are constant across day/night and GRS-read/missed fish.
+# The optional wild.ge.multiplier exercise relaxes the shared-GE assumption.
 #
 # Each simulation redraws detections and estimates GE, detection, and timing
 # in closed form. GOJ recovery is a fixed simulation input, not estimated.
@@ -89,13 +90,17 @@ simulate_borrow_rear <- function(N, a, ge.d, ge.n, p, phi) {
 
 # 3. Paired comparisons over synthetic seasons ----
 run_borrow_simulation <- function(wk = borrow_inputs(), n.sims = 2000L,
-                                  seed = 2025L, phi = 123 / 3785) {
+                                  seed = 2025L, phi = 123 / 3785,
+                                  wild.ge.multiplier = 1) {
   stopifnot(n.sims >= 1, n.sims == floor(n.sims), nrow(wk) > 0,
             all(wk$NW > 0), all(wk$NH > 0))
   # Fix the RNG algorithms as well as the seed for reproducible figures.
   RNGkind("Mersenne-Twister", "Inversion", "Rejection")
   set.seed(seed)
-  truth <- (1 - wk$aW) * wk$ge.d + wk$aW * wk$ge.n
+  stopifnot(length(wild.ge.multiplier) == 1L, is.finite(wild.ge.multiplier),
+            wild.ge.multiplier > 0,
+            all(wild.ge.multiplier * c(wk$ge.d, wk$ge.n) <= 1))
+  truth <- wild.ge.multiplier * ((1 - wk$aW) * wk$ge.d + wk$aW * wk$ge.n)
   stopifnot(all(truth > 0))
   weekly <- vector("list", n.sims)
   season <- data.frame(simulation = seq_len(n.sims), pooled = NA_real_, split = NA_real_)
@@ -104,7 +109,8 @@ run_borrow_simulation <- function(wk = borrow_inputs(), n.sims = 2000L,
                       valid = FALSE, hatchery.reason = "ok", wild.reason = "ok", pair.reason = "ok")
     for (j in seq_len(nrow(wk))) {
       h <- simulate_borrow_rear(wk$NH[j], wk$aH[j], wk$ge.d[j], wk$ge.n[j], wk$p.true[j], phi)
-      w <- simulate_borrow_rear(wk$NW[j], wk$aW[j], wk$ge.d[j], wk$ge.n[j], wk$p.true[j], phi)
+      w <- simulate_borrow_rear(wk$NW[j], wk$aW[j], wild.ge.multiplier * wk$ge.d[j],
+                                wild.ge.multiplier * wk$ge.n[j], wk$p.true[j], phi)
       out$hatchery.reason[j] <- h$reason
       out$wild.reason[j] <- w$reason
       if (!h$ok || !w$ok) { out$pair.reason[j] <- "rear estimation failed"; next }
@@ -123,7 +129,7 @@ run_borrow_simulation <- function(wk = borrow_inputs(), n.sims = 2000L,
     }
   }
   list(inputs = wk, weekly = do.call(rbind, weekly), season = season,
-       n.sims = n.sims, seed = seed, phi = phi)
+       n.sims = n.sims, seed = seed, phi = phi, wild.ge.multiplier = wild.ge.multiplier)
 }
 
 summarize_borrow_simulation <- function(result) {
@@ -216,8 +222,9 @@ main_borrow_simulation <- function(output.dir = "figures") {
 # 2. Reduce wk$NW tenfold (round and keep at least one fish). Inspect failure
 #    counts as well as conditional error summaries. Dropping difficult weeks
 #    can make successful-only performance look more favorable.
-# 3. As an extension, give wild fish different true day/night GE in the
-#    simulator and recompute wild truth. Does borrowing split GE still work?
+# 3. Run run_borrow_simulation(wild.ge.multiplier = 0.8). Wild's true day/night
+#    GE are now 20% below hatchery's, and wild truth is recomputed accordingly.
+#    Does borrowing split GE still remove the bias when the components differ?
 #
 # Where BPA teaches this ----
 # Chapter 7.9: identifiability; Chapter 9: detection histories and latent routes.

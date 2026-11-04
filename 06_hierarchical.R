@@ -450,15 +450,20 @@ print(data.frame(season = c("Constant GRS detection (matches model)", "Rising GR
 # A failed check says an assumption is wrong, not how far the estimates moved.
 # Find which assumption before trusting them.
 
-p.ppc <- ggplot(rbind(data.frame(season = "Constant GRS detection", obs = fit.ok.season$sims.list$fit.obs,
-                                 new = fit.ok.season$sims.list$fit.new),
-                      data.frame(season = "Rising GRS detection", obs = fit.bad.season$sims.list$fit.obs,
-                                 new = fit.bad.season$sims.list$fit.new)),
-                aes(obs, new)) +
+ppc.df <- rbind(data.frame(season = "Constant GRS detection", obs = fit.ok.season$sims.list$fit.obs,
+                           new = fit.ok.season$sims.list$fit.new),
+                data.frame(season = "Rising GRS detection", obs = fit.bad.season$sims.list$fit.obs,
+                           new = fit.bad.season$sims.list$fit.new))
+# Identical axes keep the 1:1 reference visible in both panels, even when
+# the observed discrepancy is far beyond the model's replicated counts.
+ppc.range <- range(c(ppc.df$obs, ppc.df$new))
+p.ppc <- ggplot(ppc.df, aes(obs, new)) +
   geom_point(alpha = 0.3, size = 0.8, color = "steelblue") +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
-  facet_wrap(~ season, scales = "free") +
-  labs(title = "Posterior predictive check (points below the line: data fit worse than the model's own)",
+  facet_wrap(~ season) +
+  coord_equal(xlim = ppc.range, ylim = ppc.range) +
+  labs(title = "Can the model reproduce the observed counts?",
+       subtitle = "Below diagonal: observed counts have greater discrepancy than replicated counts.",
        x = "Discrepancy, observed counts", y = "Discrepancy, simulated counts") +
   theme_bw(base_size = 13)
 print(p.ppc)
