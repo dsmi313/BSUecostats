@@ -27,7 +27,7 @@ After setup, run [05_six_cell.R](05_six_cell.R) top to bottom once (under a minu
 2. Download this repository (**Code → Download ZIP**) and extract it.
 3. In R, set the working directory to the extracted folder, the one containing `00_setup.R`, and run `source("00_setup.R")`. It installs jagsUI, ggplot2, and posterior, checks that R can find JAGS, and fits a tiny test model.
 
-Run one script at a time from that folder and read the comments as you go. Keep the [glossary](GLOSSARY.md) open for the fish terms (GE, GRJ, spill) and the statistics terms (prior, Rhat, logit). Every JAGS fit is screened for convergence, and the script warns if one fails.
+Keep that folder as the working directory for every script. The JAGS lessons start with `source("helpers.R")`, which loads the shared diagnostic checks; if R says it cannot open `helpers.R`, the working directory is wrong. Run one script at a time and read the comments as you go. Keep the [glossary](GLOSSARY.md) open for the fish terms (GE, GRJ, spill) and the statistics terms (prior, Rhat, logit). Every JAGS fit is screened for convergence, and the script warns if one fails.
 
 ## Scripts
 
