@@ -36,7 +36,7 @@ Times and printed numbers come from running each script unchanged on 4 November 
 ### Basics: no Bayesian background needed
 
 - [01_first_bayesian_model.R](01_first_bayesian_model.R): prior, likelihood, and posterior for one efficiency trial, by hand and in JAGS; how to read JAGS output. *Under 5 seconds.* Prints p 0.173 (95% CrI 0.084–0.286). [Plot](figures/01_first_bayesian_model.png)
-- [02_lincoln_petersen.R](02_lincoln_petersen.R): the talk's Bailey estimate, trap-efficiency expansion, and Jensen's inequality. No JAGS. *Under 5 seconds.* Prints Bailey 9,533, and a +1-adjusted mean of 3,984 against truth 4,000. [Plot](figures/02_lincoln_petersen.png)
+- [02_lincoln_petersen.R](02_lincoln_petersen.R): the talk's Petersen estimate (plus Bailey's modification), trap-efficiency expansion, and Jensen's inequality. No JAGS. *Under 5 seconds.* Prints Petersen 10,000 and Bailey 9,533, and a +1-adjusted mean of 3,984 against truth 4,000. [Plot](figures/02_lincoln_petersen.png)
 - [03_bernoulli_logit.R](03_bernoulli_logit.R): a logit GLM, with spill shifting guidance. *Under 5 seconds.* Prints spill slope −0.71 (−0.96 to −0.47), truth −0.8. [Plot](figures/03_bernoulli_logit.png)
 
 ### Capture-recapture models

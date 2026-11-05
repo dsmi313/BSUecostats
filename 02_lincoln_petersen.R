@@ -23,14 +23,20 @@
 
 library(ggplot2)
 
-# 0. The talk's exact toy example: Bailey's modification ----
+# 0. The talk's exact toy example: plain Petersen, then Bailey ----
+# The slide shows plain Lincoln-Petersen: N = C / (R/M) = MC/R = 10,000.
+# Bailey's modification is an addition beyond the slide. Its +1 terms reduce
+# small-sample bias and keep the estimate finite when R = 0, where MC/R
+# divides by zero (section 2 shows how often that happens).
 # Keep the slide's estimator and numbers separate from the independent-trial
 # simulation below. Swapping M and C inside the +1 terms changes the estimator.
+petersen <- function(M, C, R) M * C / R
 bailey <- function(M, C, R) M * (C + 1) / (R + 1)
 slide.M <- 200; slide.C <- 1000; slide.R <- 20
-cat("Talk example, Bailey:", round(bailey(slide.M, slide.C, slide.R)),
-    "  plain Petersen:", slide.M * slide.C / slide.R, "\n")
-stopifnot(round(bailey(slide.M, slide.C, slide.R)) == 9533)
+cat("Talk example (slide), plain Petersen:", petersen(slide.M, slide.C, slide.R), "\n")
+cat("Addition, Bailey's modification:     ", round(bailey(slide.M, slide.C, slide.R)), "\n")
+stopifnot(petersen(slide.M, slide.C, slide.R) == 10000,
+          round(bailey(slide.M, slide.C, slide.R)) == 9533)
 # With multiple disjoint strata, apply the formula to each stratum and sum.
 # This second row is an additional hypothetical stratum, not a slide value.
 strata.example <- data.frame(stratum = 1:2, M = c(200, 100),
