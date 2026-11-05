@@ -6,7 +6,7 @@ Which script reproduces each slide, and the simulation settings behind the dam e
 
 | Talk topic | Companion example and scope |
 |---|---|
-| We Control the Marks | `02`, section 0: Bailey's 9,533 example and sum across strata. The following independent-trial simulation uses a different correction. |
+| We Control the Marks | `02`, section 0: plain Petersen 10,000 (the slide), then Bailey's 9,533 as an addition that stays finite at zero recaptures, and sum across strata. The following independent-trial simulation uses a different correction. |
 | Where Bootstrap Intervals Come From | `08`, section 0: 130 caught, sample rate 0.25, GE 0.13, 2,000 replicates, 90% interval. Its `set.seed(20261029)` simulation gives the slide's 3,445–4,585 and draws the slide's histogram; exact binomial endpoints round to 3,446–4,585. |
 | Step 2: The Row Method | `05`, section 0: three rows with read probabilities 0.64, 0.61, 0.53 and a combined 0.934012. Row overlaps illustrate estimation under independent, equally readable fish. |
 | Most of the PIT Fish Are Hatchery | `06`, section 1b: an illustrative adjacent-week pooling rule requiring both c4+c5 > 10 and c3+c4 > 10, with a trailing group merged backward. The fitted simulation retains its fixed teaching strata. |
